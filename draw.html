@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>手写"陈" — 笔画采集</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #1a1a1a;
+  color: #fff;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+h1 { font-size: 1.4rem; margin: 10px 0 4px; letter-spacing: 0.05em; }
+.sub { font-size: 0.8rem; color: #888; margin-bottom: 12px; }
+canvas {
+  border: 2px dashed #555;
+  border-radius: 6px;
+  cursor: crosshair;
+  background: #fff;
+  touch-action: none;
+  max-width: 100%;
+}
+.controls {
+  display: flex;
+  gap: 12px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+button {
+  padding: 10px 22px;
+  font-size: 0.95rem;
+  border: 1px solid #555;
+  background: #2a2a2a;
+  color: #fff;
+  border-radius: 5px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: all 0.15s;
+}
+button:hover { background: #3a3a3a; border-color: #888; }
+button.primary { background: #4F46E5; border-color: #4F46E5; }
+button.primary:hover { background: #6366f1; }
+button.export { background: #10B981; border-color: #10B981; }
+button.export:hover { background: #34d399; }
+.output {
+  margin-top: 14px;
+  width: 100%;
+  max-width: 900px;
+}
+.output textarea {
+  width: 100%;
+  height: 120px;
+  background: #0d0d0d;
+  color: #10B981;
+  border: 1px solid #333;
+  border-radius: 5px;
+  padding: 10px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 0.78rem;
+  resize: vertical;
+}
+.label { font-size: 0.75rem; color: #888; margin-bottom: 4px; }
+.info { font-size: 0.78rem; color: #666; margin-top: 4px; }
+.slider-wrap { display: flex; align-items: center; gap: 10px; margin: 8px 0 4px; }
+.slider-wrap label { font-size: 0.82rem; color: #aaa; white-space: nowrap; }
+.slider-wrap input[type=range] { width: 140px; accent-color: #4F46E5; }
+</style>
+</head>
+<body>
+<h1>用鼠标/触控笔写"陈"</h1>
+<p class="sub">一笔一画写，笔画之间抬笔即可自动分段</p>
+<div class="slider-wrap">
+  <label for="lw">笔粗：<span id="lwVal">32</span>px</label>
+  <input type="range" id="lw" min="6" max="80" value="32" oninput="setLineWidth(this.value)">
+</div>
+<canvas id="c" width="1200" height="500"></canvas>
+<div class="controls">
+  <button class="primary" onclick="undo()">↩ 撤销上一笔</button>
+  <button onclick="clearAll()">✕ 全部清除</button>
+  <button class="export" onclick="exportSVG()">⬇ 导出 SVG Path</button>
+</div>
+<div class="output">
+  <div class="label">SVG Path 数据（复制下面的内容发给我）：</div>
+  <textarea id="out" readonly placeholder="画完点「导出 SVG Path」…"></textarea>
+  <p class="info">笔画数：<span id="strokeCount">0</span> &nbsp;|&nbsp; 写完点导出，把下面文本框内容复制给我就行</p>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = canvas.width;
+const H = canvas.height;
+
+let strokes = [];      // [[{x,y}, {x,y}, ...], ...]
+let current = [];      // current stroke being drawn
+let drawing = false;
+
+// Styling
+ctx.strokeStyle = '#050505';
+ctx.lineWidth = 32;
+ctx.lineCap = 'round';
+ctx.lineJoin = 'round';
+
+function setLineWidth(v) {
+  ctx.lineWidth = parseInt(v);
+  document.getElementById('lwVal').textContent = v;
+  // Re-render so existing strokes use new width? No — width only applies to new strokes.
+}
+
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = W / rect.width;
+  const scaleY = H / rect.height;
+  return {
+    x: (e.clientX - rect.left) * scaleX,
+    y: (e.clientY - rect.top) * scaleY
+  };
+}
+
+canvas.addEventListener('pointerdown', (e) => {
+  drawing = true;
+  const p = getPos(e);
+  current = [p];
+  strokes.push(current);
+  updateCount();
+  // Draw dot
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, ctx.lineWidth/2, 0, Math.PI*2);
+  ctx.fillStyle = '#050505';
+  ctx.fill();
+});
+
+canvas.addEventListener('pointermove', (e) => {
+  if (!drawing) return;
+  const p = getPos(e);
+  const prev = current[current.length - 1];
+  current.push(p);
+  // Draw segment
+  ctx.beginPath();
+  ctx.moveTo(prev.x, prev.y);
+  ctx.lineTo(p.x, p.y);
+  ctx.stroke();
+});
+
+window.addEventListener('pointerup', () => {
+  drawing = false;
+  updateCount();
+});
+
+function undo() {
+  if (strokes.length === 0) return;
+  strokes.pop();
+  redraw();
+  updateCount();
+}
+
+function clearAll() {
+  strokes = [];
+  current = [];
+  drawing = false;
+  ctx.clearRect(0, 0, W, H);
+  updateCount();
+  document.getElementById('out').value = '';
+}
+
+function redraw() {
+  ctx.clearRect(0, 0, W, H);
+  for (const stroke of strokes) {
+    if (stroke.length < 2) {
+      if (stroke.length === 1) {
+        ctx.beginPath();
+        ctx.arc(stroke[0].x, stroke[0].y, ctx.lineWidth/2, 0, Math.PI*2);
+        ctx.fill();
+      }
+      continue;
+    }
+    ctx.beginPath();
+    ctx.moveTo(stroke[0].x, stroke[0].y);
+    for (let i = 1; i < stroke.length; i++) {
+      ctx.lineTo(stroke[i].x, stroke[i].y);
+    }
+    ctx.stroke();
+  }
+}
+
+function updateCount() {
+  document.getElementById('strokeCount').textContent = strokes.filter(s => s.length >= 2).length;
+}
+
+function simplify(stroke, minDist = 4) {
+  if (stroke.length <= 2) return stroke;
+  const result = [stroke[0]];
+  for (let i = 1; i < stroke.length; i++) {
+    const last = result[result.length - 1];
+    const dx = stroke[i].x - last.x;
+    const dy = stroke[i].y - last.y;
+    if (dx*dx + dy*dy >= minDist*minDist) {
+      result.push(stroke[i]);
+    }
+  }
+  // Always include last point
+  if (result.length > 1 || stroke.length > 1) {
+    const lastR = result[result.length - 1];
+    const lastS = stroke[stroke.length - 1];
+    if (lastR.x !== lastS.x || lastR.y !== lastS.y) {
+      result.push(lastS);
+    }
+  }
+  return result;
+}
+
+function exportSVG() {
+  const valid = strokes.filter(s => s.length >= 2);
+  if (valid.length === 0) {
+    document.getElementById('out').value = '// 还没画 — 先画再导出';
+    return;
+  }
+
+  const lines = [];
+  for (let i = 0; i < valid.length; i++) {
+    const simple = simplify(valid[i], 4);
+    let d = `M ${simple[0].x.toFixed(1)} ${simple[0].y.toFixed(1)}`;
+    for (let j = 1; j < simple.length; j++) {
+      d += ` L ${simple[j].x.toFixed(1)} ${simple[j].y.toFixed(1)}`;
+    }
+    lines.push(`    <path class="chen-s${i}" d="${d}"/>`);
+  }
+
+  const svg = [
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">`,
+    '  <g fill="none" stroke="#CCFF00" stroke-linecap="round" stroke-linejoin="round">',
+    ...lines,
+    '  </g>',
+    '</svg>'
+  ].join('\n');
+
+  document.getElementById('out').value = svg;
+  updateCount();
+}
+</script>
+</body>
+</html>

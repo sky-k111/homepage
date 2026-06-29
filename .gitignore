@@ -1,0 +1,4 @@
+node_modules/
+.next/
+bun.lock
+trace_to_svg.py

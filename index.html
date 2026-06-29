@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="陈奕恺 — CS Student · Builder · Creative" />
+<title>CHEN YIKAI — Personal Homepage</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Caveat:wght@600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --indigo: #4F46E5;
+  --emerald: #10B981;
+  --rose: #F43F5E;
+  --black: #050505;
+  --white: #ffffff;
+  --paper: #f4efe7;
+}
+* { box-sizing: border-box; }
+/* scroll-behavior removed — conflicts w/ GSAP ScrollTrigger on Safari */
+body {
+  margin: 0;
+  font-family: 'Inter', 'Noto Sans SC', sans-serif;
+  background: var(--black);
+  color: var(--black);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+.display { font-family: 'Anton', sans-serif; }
+.hand { font-family: 'Caveat', cursive; }
+::selection { background: #000; color: var(--emerald); }
+
+.poster-section {
+  position: relative;
+  min-height: 100svh;
+  width: 100%;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.divider-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.18) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.18) 1px, transparent 1px);
+  background-size: 20vw 100%, 100% 25vh;
+}
+.divider-grid.dark-lines::before {
+  background-image:
+    linear-gradient(to right, rgba(0,0,0,0.16) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0,0,0,0.16) 1px, transparent 1px);
+}
+
+.huge-word {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(8rem, 28vw, 30rem);
+  line-height: 0.78;
+  letter-spacing: -0.055em;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.ghost-word {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  will-change: transform, opacity, filter;
+  line-height: 0.85;
+  letter-spacing: -0.04em;
+}
+
+.section-label {
+  position: absolute;
+  left: 1.25rem;
+  top: 5rem;
+  z-index: 10;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+/* About — ESFJ background word */
+.bg-mbti {
+  position: absolute;
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(12rem, 42vw, 42rem);
+  line-height: 0.78;
+  letter-spacing: -0.04em;
+  user-select: none;
+  will-change: transform, opacity;
+}
+
+/* Manifesto-style scattered words */
+.manifesto-sentence {
+  max-width: min(1100px, 90vw);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15em 0.3em;
+  text-align: center;
+}
+.manifesto-word {
+  display: inline-block;
+  will-change: transform, opacity;
+  font-family: 'Inter', 'Noto Sans SC', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.2rem, 2.8vw, 2.2rem);
+  line-height: 1.3;
+  color: #1a1a1a;
+}
+
+/* Archive grid placeholders */
+.archive-grid {
+  position: relative;
+  z-index: 5;
+  width: min(88vw, 1120px);
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  will-change: transform;
+}
+.archive-placeholder {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+
+/* Jay photo cards */
+.jay-photo {
+  will-change: transform, opacity;
+  transform-origin: center center;
+}
+.jay-photo img {
+  transition: transform 0.4s ease;
+}
+/* Hover: grid-wide transparency → reveal JAY behind */
+#jayGrid .jay-photo {
+  transition: opacity 0.45s ease, filter 0.45s ease;
+}
+#jayGrid:hover .jay-photo {
+  opacity: 0.38;
+}
+.jay-photo:hover {
+  opacity: 0.1 !important;
+  z-index: 30 !important;
+}
+.jay-photo:hover img {
+  transform: scale(1.1);
+}
+
+/* Jay sentence — handwritten */
+#jaySentence .manifesto-word {
+  font-family: 'Caveat', 'Noto Sans SC', cursive;
+  font-weight: 700;
+  font-size: clamp(1.6rem, 3.8vw, 3rem);
+  color: #ffffff;
+}
+
+/* Skill tags */
+.skill-tag {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  white-space: nowrap;
+  will-change: transform, opacity;
+  cursor: default;
+  transition: transform 0.3s;
+}
+.skill-tag:hover {
+  transform: scale(1.08) translateY(-2px);
+}
+
+/* Music & Sports image placeholders */
+.media-placeholder {
+  aspect-ratio: 3 / 2;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Contact cards */
+.contact-panel {
+  min-height: 260px;
+  border: 1px solid rgba(255,255,255,0.28);
+  background: #050505;
+  color: white;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  will-change: transform, opacity;
+}
+
+/* Sweep words */
+.sweep-word {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(6.8rem, 26vw, 25rem);
+  line-height: 0.78;
+  letter-spacing: -0.055em;
+  white-space: nowrap;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* ======================= LOADER ======================= */
+body.is-loading {
+  height: 100svh;
+  overflow: hidden;
+}
+.noema-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow: hidden;
+  background: #050505;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+}
+.loader-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.28;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.16) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.16) 1px, transparent 1px);
+  background-size: 20vw 100%, 100% 25vh;
+  pointer-events: none;
+}
+.loader-mark {
+  position: absolute;
+  top: 1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  width: 34px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  opacity: 0.9;
+}
+.loader-mark svg { width: 34px; height: 18px; overflow: visible; }
+.loader-brand {
+  position: relative;
+  z-index: 5;
+  text-align: center;
+  overflow: hidden;
+  padding: 0.4rem 0.6rem;
+}
+.loader-brand-main {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.015em;
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(2.6rem, 10vw, 10rem);
+  line-height: 0.78;
+  letter-spacing: -0.055em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.loader-letter { display: inline-block; will-change: transform, opacity; }
+.loader-dot { color: var(--indigo); margin-left: 0.015em; }
+.loader-tag {
+  margin-top: 0.75rem;
+  font-size: clamp(0.72rem, 1.1vw, 0.9rem);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.62);
+  will-change: transform, opacity;
+}
+.loader-meta {
+  position: absolute;
+  left: 1.25rem; right: 1.25rem; bottom: 1.25rem;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.62);
+  will-change: transform, opacity;
+}
+.loader-strips {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  align-items: end;
+  pointer-events: none;
+}
+.loader-strip {
+  height: 100%;
+  transform: scaleY(0);
+  transform-origin: bottom;
+  border-right: 1px solid rgba(0,0,0,0.12);
+  will-change: transform;
+}
+.loader-strip:nth-child(1) { background: var(--paper); }
+.loader-strip:nth-child(2) { background: var(--indigo); }
+.loader-strip:nth-child(3) { background: #ffffff; }
+.loader-strip:nth-child(4) { background: var(--emerald); }
+.loader-strip:nth-child(5) { background: var(--rose); }
+.loader-strip:nth-child(6) { background: #ffffff; }
+.loader-strip:nth-child(7) { background: var(--paper); }
+.loader-scanline {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  z-index: 6;
+  height: 1px;
+  background: rgba(255,255,255,0.8);
+  transform-origin: left;
+  transform: scaleX(0);
+  will-change: transform;
+}
+
+/* PAWS filmstrip */
+.paws-strip-wrapper {
+  overflow: hidden;
+  width: 100%;
+}
+.paws-strip {
+  display: flex;
+  gap: 0.5rem;
+  will-change: transform;
+  width: max-content;
+}
+.paws-strip--small {
+  height: clamp(16vh, 22vh, 26vh);
+}
+.paws-strip--large {
+  height: clamp(30vh, 44vh, 52vh);
+}
+.paws-strip img {
+  height: 100%;
+  width: auto;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+  will-change: transform;
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+.paws-strip img:hover {
+  transform: scale(1.05);
+  box-shadow: 0 14px 44px rgba(0,0,0,0.28);
+  z-index: 5;
+  position: relative;
+}
+@media (max-width: 768px) {
+  .paws-strip--small { height: clamp(12vh, 16vh, 20vh); }
+  .paws-strip--large { height: clamp(24vh, 34vh, 40vh); }
+  .paws-strip { gap: 0.35rem; }
+  .paws-strip img { border-radius: 3px; }
+}
+
+@media (max-width: 768px) {
+  .huge-word {
+    font-size: clamp(5.5rem, 37vw, 14rem);
+    letter-spacing: -0.065em;
+  }
+  .archive-grid {
+    width: 92vw;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .bg-mbti {
+    font-size: clamp(7rem, 50vw, 20rem);
+  }
+  .section-label { left: 1rem; top: 4.5rem; }
+  .poster-section { min-height: 100svh; }
+}
+@media (min-width: 768px) {
+  .poster-section {
+    min-height: auto !important;
+    height: 100svh !important;
+    max-height: 1080px !important;
+  }
+}
+</style>
+</head>
+<body class="bg-black antialiased overflow-x-hidden is-loading">
+
+<!-- ======================= LOADER ======================= -->
+<div id="noemaLoader" class="noema-loader" aria-hidden="true">
+  <div class="loader-grid"></div>
+  <div class="loader-mark">
+    <svg viewBox="0 0 42 18" fill="none" aria-hidden="true">
+      <path d="M3 9C8 1.8 14 1.8 21 9C28 16.2 34 16.2 39 9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></path>
+      <path d="M3 9C8 16.2 14 16.2 21 9C28 1.8 34 1.8 39 9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity="0.55"></path>
+    </svg>
+  </div>
+  <div class="loader-brand">
+    <div class="loader-brand-main" aria-label="CHENYIKAI">
+      <span class="loader-letter">C</span><span class="loader-letter">H</span><span class="loader-letter">E</span><span class="loader-letter">N</span>
+      <span class="loader-letter">&nbsp;</span>
+      <span class="loader-letter">Y</span><span class="loader-letter">I</span><span class="loader-letter">K</span><span class="loader-letter">A</span><span class="loader-letter">I</span>
+    </div>
+    <div class="loader-tag">CS Student · Builder · Creative</div>
+  </div>
+  <div class="loader-meta">
+    <span>ZJSU / Computer Science</span>
+    <span>Loading presence</span>
+  </div>
+  <div class="loader-strips">
+    <span class="loader-strip"></span><span class="loader-strip"></span><span class="loader-strip"></span><span class="loader-strip"></span><span class="loader-strip"></span><span class="loader-strip"></span><span class="loader-strip"></span>
+  </div>
+  <div class="loader-scanline"></div>
+</div>
+
+<!-- ======================= FIXED NAV ======================= -->
+<nav class="fixed top-0 left-0 right-0 z-[60] flex items-start justify-between px-5 md:px-8 pt-5 text-white mix-blend-difference pointer-events-none">
+  <div class="leading-tight pointer-events-auto">
+    <a href="#hero" class="display text-base tracking-tight uppercase">CHEN YIKAI</a>
+    <p class="text-xs opacity-75 mt-1.5">CS · ZJSU</p>
+  </div>
+  <div class="hidden lg:flex items-center gap-7 text-sm font-medium pt-1 pointer-events-auto">
+    <a href="#about" class="hover:opacity-60 transition-opacity">About</a>
+    <a href="#skills" class="hover:opacity-60 transition-opacity">Skills</a>
+    <a href="#projects" class="hover:opacity-60 transition-opacity">Projects</a>
+    <a href="#music" class="hover:opacity-60 transition-opacity">Music</a>
+    <a href="#jay" class="hover:opacity-60 transition-opacity">Jay</a>
+    <a href="#sports" class="hover:opacity-60 transition-opacity">Sports</a>
+    <a href="#paws" class="hover:opacity-60 transition-opacity">Paws</a>
+    <a href="#contact" class="hover:opacity-60 transition-opacity">Contact</a>
+  </div>
+  <div class="flex items-center gap-5 text-sm font-medium pt-1 pointer-events-auto">
+    <a href="https://github.com/sky-k111" target="_blank" rel="noopener" class="hover:opacity-60 transition-opacity">GitHub</a>
+    <button class="lg:hidden" aria-label="Open menu">
+      <i data-lucide="menu" class="w-5 h-5"></i>
+    </button>
+  </div>
+</nav>
+
+<!-- ======================= 1 · HERO ======================= -->
+<section id="hero" class="poster-section h-screen bg-[#050505] divider-grid">
+  <div id="heroWord" class="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+    <h1 class="display text-white text-[26vw] md:text-[20vw] leading-none tracking-[-0.055em] whitespace-nowrap select-none">
+      CHEN YIKAI
+    </h1>
+  </div>
+
+  <!-- Slam blocks: color wipes with giant words -->
+  <div id="slamCS" class="absolute inset-0 z-10 flex items-center justify-center bg-[#4F46E5] origin-left scale-x-0 will-change-transform">
+    <span class="display text-white text-[16vw] md:text-[12vw] select-none">CS</span>
+  </div>
+  <div id="slamZJSU" class="absolute inset-0 z-10 flex items-center justify-center bg-[#10B981] origin-right scale-x-0 will-change-transform">
+    <span class="display text-white text-[16vw] md:text-[12vw] select-none">ZJSU</span>
+  </div>
+  <div id="slamBuilder" class="absolute inset-0 z-10 flex items-center justify-center bg-[#F43F5E] origin-bottom scale-y-0 will-change-transform">
+    <span class="display text-white text-[16vw] md:text-[12vw] select-none">BUILDER</span>
+  </div>
+
+  <!-- Final identity tags — appear after ghosts fade -->
+  <div class="absolute inset-0 flex items-center justify-center z-20" style="perspective:1400px;">
+    <div class="relative w-full max-w-4xl h-[55vh] flex items-center justify-center">
+      <div id="tag1" class="absolute will-change-transform">
+        <div class="bg-[#050505] text-white border border-white/20 px-6 py-4 shadow-[20px_30px_50px_rgba(0,0,0,0.4)]">
+          <p class="display text-xl leading-tight tracking-tight">CS</p>
+          <p class="text-xs text-white/50 mt-1">Computer Science</p>
+        </div>
+      </div>
+      <div id="tag2" class="absolute z-10 will-change-transform">
+        <div class="bg-[#050505] text-white border border-white/25 px-7 py-5 shadow-[0_40px_60px_rgba(0,0,0,0.5)]">
+          <p class="display text-2xl leading-tight tracking-tight">ZJSU</p>
+          <p class="text-xs text-white/50 mt-1">浙江工商大学</p>
+        </div>
+      </div>
+      <div id="tag3" class="absolute will-change-transform">
+        <div class="bg-[#050505] text-white border border-white/20 px-6 py-4 shadow-[-20px_30px_50px_rgba(0,0,0,0.4)]">
+          <p class="display text-xl leading-tight tracking-tight">Builder</p>
+          <p class="text-xs text-white/50 mt-1">Creative Coder</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="heroCopy" class="absolute bottom-0 left-0 right-0 border-t border-white/40 z-30">
+    <div class="px-5 md:px-8 py-5 flex items-end justify-between text-white">
+      <p class="text-base md:text-lg font-medium leading-snug max-w-sm">
+        CS 在读，热爱代码、音乐与运动。<br />保持好奇，迎接挑战。
+      </p>
+      <i data-lucide="arrow-down" class="w-5 h-5 mb-1 animate-bounce" stroke-width="1.5"></i>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= 2 · ABOUT ======================= -->
+<section id="about" class="poster-section h-screen bg-[#f4efe7] divider-grid dark-lines">
+  <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(79,70,229,0.18),transparent_30%),radial-gradient(circle_at_80%_68%,rgba(244,63,94,0.16),transparent_28%)]"></div>
+
+  <!-- ESFJ background word -->
+  <div id="esfjWord" class="bg-mbti absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0 text-black/[0.06]">
+    ESFJ
+  </div>
+
+  <!-- About text scattered then assemble -->
+  <div class="absolute inset-0 flex items-center justify-center z-10 px-5">
+    <div id="aboutSentence" class="manifesto-sentence">
+      <span class="manifesto-word">浙江工商大学</span>
+      <span class="manifesto-word">计算机科学与技术专业在读。</span>
+      <span class="manifesto-word">性格外向开朗，</span>
+      <span class="manifesto-word">天蝎座，</span>
+      <span class="manifesto-word">喜欢用代码</span>
+      <span class="manifesto-word">构建有趣的东西，</span>
+      <span class="manifesto-word">也热爱音乐和运动。</span>
+      <span class="manifesto-word">喜欢挑战，</span>
+      <span class="manifesto-word">保持对生活的</span>
+      <span class="manifesto-word">好奇与激情。</span>
+    </div>
+  </div>
+
+  <span id="scorpioWord" class="hand absolute z-20 text-[#F43F5E] text-[16vw] md:text-[9vw] right-[14%] top-[58%] -rotate-12 select-none drop-shadow-md">Scorpio</span>
+
+  <div class="absolute top-[10%] left-[6%] display text-[8vw] leading-none text-black/[0.04] rotate-[-6deg] select-none">
+    ESFJ · SCORPIO · CURIOUS · PASSIONATE · BUILDER
+  </div>
+
+  <p class="section-label text-black/50">01 / About</p>
+</section>
+
+<!-- ======================= 3 · SKILLS ======================= -->
+<section id="skills" class="poster-section h-screen bg-[#10B981] divider-grid dark-lines flex items-center justify-center px-5">
+  <h2 id="skillsWord" class="huge-word absolute z-0 text-black/15 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none">
+    SKILLS
+  </h2>
+  <div class="relative z-10 flex flex-wrap justify-center gap-3 md:gap-5 max-w-4xl">
+    <span id="skillC" class="skill-tag bg-[#050505] text-white border border-white/20 px-8 py-5 md:px-12 md:py-7 text-2xl md:text-4xl shadow-[16px_20px_40px_rgba(0,0,0,0.3)]">C</span>
+    <span id="skillCpp" class="skill-tag bg-[#050505] text-white border border-white/20 px-8 py-5 md:px-12 md:py-7 text-2xl md:text-4xl shadow-[16px_20px_40px_rgba(0,0,0,0.3)]">C++</span>
+    <span id="skillVibe" class="skill-tag bg-white text-[#050505] border border-black/20 px-8 py-5 md:px-12 md:py-7 text-2xl md:text-4xl shadow-[16px_20px_40px_rgba(0,0,0,0.3)]">Vibecoding</span>
+  </div>
+  <div class="absolute bottom-0 left-0 right-0 border-t border-black/25 z-10">
+    <div class="px-5 md:px-8 py-5 flex items-end justify-between text-black">
+      <p class="text-base font-semibold max-w-sm leading-snug">不断学习，用技术构建有趣的东西。</p>
+      <p class="text-xs text-black/55 hidden sm:block">C · C++ · Vibecoding</p>
+    </div>
+  </div>
+  <p class="section-label text-black/50">02 / Skills</p>
+</section>
+
+<!-- ======================= 4 · PROJECTS ======================= -->
+<section id="projects" class="poster-section h-screen bg-[#050505] divider-grid flex items-center justify-center px-5">
+  <h2 id="projectsWord" class="huge-word absolute z-0 text-white/[0.08] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 select-none">
+    PROJECTS
+  </h2>
+  <div class="archive-grid">
+    <div class="archive-placeholder"></div><div class="archive-placeholder"></div><div class="archive-placeholder"></div>
+    <div class="archive-placeholder"></div><div class="archive-placeholder"></div><div class="archive-placeholder"></div>
+    <div class="archive-placeholder"></div><div class="archive-placeholder"></div><div class="archive-placeholder"></div>
+    <div class="archive-placeholder"></div><div class="archive-placeholder"></div><div class="archive-placeholder"></div>
+    <div class="archive-placeholder"></div><div class="archive-placeholder"></div><div class="archive-placeholder"></div>
+  </div>
+  <div class="absolute bottom-0 left-0 right-0 border-t border-white/25 z-10">
+    <div class="px-5 md:px-8 py-5 flex items-end justify-between text-white">
+      <p class="text-base font-semibold max-w-sm leading-snug">项目作品将陆续上线，敬请期待。</p>
+      <p class="text-xs text-white/50 hidden sm:block">Coming soon</p>
+    </div>
+  </div>
+  <p class="section-label text-white/50">03 / Projects</p>
+</section>
+
+<!-- ======================= 5 · MUSIC ======================= -->
+<section id="music" class="poster-section h-screen bg-[#F43F5E] divider-grid dark-lines">
+  <h2 id="musicWord" class="huge-word absolute left-[-3vw] top-1/2 -translate-y-1/2 z-0 text-black/20 select-none">
+    MUSIC
+  </h2>
+  <div class="relative z-10 min-h-screen grid grid-cols-1 lg:grid-cols-2 items-center gap-8 px-5 md:px-8 pt-24 pb-20">
+    <div class="hidden lg:block"></div>
+    <div id="musicCard" class="max-w-lg ml-auto space-y-6">
+      <!-- Image -->
+      <div class="music-img w-full aspect-[4/3] rounded-lg overflow-hidden bg-white/[0.06] border border-white/20">
+        <img src="images/music/a7be1ea2b715c97d369367e21473dee3.jpg" alt="Music" class="w-full h-full object-cover" />
+      </div>
+      <div class="bg-[#050505] text-white border border-white/20 p-6 shadow-[20px_30px_50px_rgba(0,0,0,0.4)]">
+        <p class="display text-2xl tracking-tight leading-none">LISTEN & SING</p>
+        <p class="text-sm text-white/65 mt-4 leading-relaxed">耳机是日常标配，从流行到电子都听。也喜欢唱歌，旋律是最好的表达方式之一。</p>
+        <div class="mt-5 flex flex-wrap gap-2">
+          <span class="text-xs border border-white/25 px-3 py-1 rounded-full text-white/60">Pop</span>
+          <span class="text-xs border border-white/25 px-3 py-1 rounded-full text-white/60">Electronic</span>
+          <span class="text-xs border border-white/25 px-3 py-1 rounded-full text-white/60">Singing</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="absolute left-5 md:left-8 top-[24%] z-20 hidden md:block">
+    <p class="display text-[10vw] leading-none tracking-[-0.055em] text-black/30">♫</p>
+    <p class="text-xs uppercase tracking-[0.18em] max-w-[160px] text-black/50">Music is the soundtrack of life</p>
+  </div>
+  <div class="absolute bottom-0 left-0 right-0 border-t border-black/25 z-10">
+    <div class="px-5 md:px-8 py-5 text-black">
+      <p class="text-base font-semibold">耳机 + 歌喉 = 我的日常。</p>
+    </div>
+  </div>
+  <p class="section-label text-black/50">04 / Music</p>
+</section>
+
+<!-- ======================= 6 · JAY CHOU ======================= -->
+<section id="jay" class="poster-section h-screen bg-[#0a0806] divider-grid">
+  <!-- Warm ambient glow -->
+  <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(244,63,94,0.12),transparent_50%),radial-gradient(circle_at_30%_70%,rgba(245,158,11,0.08),transparent_40%)]"></div>
+
+  <!-- Big JAY word -->
+  <h2 id="jayWord" class="huge-word absolute z-0 text-white/[0.14] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none" style="font-size:clamp(14rem,38vw,42rem);">JAY</h2>
+
+  <!-- Sentence: "Jay 是我最喜欢的歌手" -->
+  <div class="absolute top-[10%] left-0 right-0 z-20 flex justify-center px-5">
+    <div id="jaySentence" class="manifesto-sentence">
+      <span class="manifesto-word text-white/90">Jay</span>
+      <span class="manifesto-word text-white/90">是</span>
+      <span class="manifesto-word text-white/90">我</span>
+      <span class="manifesto-word text-white/90">最</span>
+      <span class="manifesto-word text-white/90">喜欢</span>
+      <span class="manifesto-word text-white/90">的</span>
+      <span class="manifesto-word text-white/90">歌手</span>
+    </div>
+  </div>
+
+  <!-- Photo grid -->
+  <div class="relative z-10 w-full max-w-[95vw] md:max-w-6xl mx-auto mt-44 md:mt-40">
+    <div id="jayGrid" class="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-2 md:gap-3">
+          <div class="jay-photo relative overflow-hidden rounded-sm bg-white/[0.04] border border-white/10" style="aspect-ratio:3/4;"><img src="images/music/0f16e501069976721b2b69569432ecb3.jpg" alt="Jay Chou" class="absolute inset-0 w-full h-full object-cover" loading="lazy" /></div>
+          <div class="jay-photo relative overflow-hidden rounded-sm bg-white/[0.04] border border-white/10" style="aspect-ratio:3/4;"><img src="images/music/0f449349d9f926ac6d1b4d5eab0fb9e9.jpg" alt="Jay Chou" class="absolute inset-0 w-full h-full object-cover" loading="lazy" /></div>
+          <div class="jay-photo relative overflow-hidden rounded-sm bg-white/[0.04] border border-white/10" style="aspect-ratio:3/4;"><img src="images/music/20ed4f88c61cff024d1879ce88619ce9.jpg" alt="Jay Chou" class="absolute inset-0 w-full h-full object-cover" loading="lazy" /></div>
+          <div class="jay-photo relative overflow-hidden rounded-sm bg-white/[0.04] border border-white/10" style="aspect-ratio:3/4;"><img src="images/music/2f910c4c6eb03192c31a05da40af044d.jpg" alt="Jay Chou" class="absolute inset-0 w-full h-full object-cover" loading="lazy" /></div>
+          <div class="jay-photo relative overflow-hidden rounded-sm bg-white/[0.04] border border-white/10" style="aspect-ratio:3/4;"><img src="images/music/639dcdc9f9ae7e7a56b57b896875c1fd.jpg" alt="Jay Chou" class="absolute inset-0 w-full h-full object-cover" loading="lazy" /></div>
+          <div class="jay-photo relative overflow-hidden rounded-sm bg-white/[0.04] border border-white/10" style="aspect-ratio:3/4;"><img src="images/music/717cd97b989e965b30cb782f282aa021.jpg" alt="Jay Chou" class="absolute inset-0 w-full h-full object-cover" loading="lazy" /></div>
+          <div class="jay-photo relative overflow-hidden rounded-sm bg-white/[0.04] border border-white/10" style="aspect-ratio:3/4;"><img src="images/music/74a9c4fa01a451cf3d163d6f0baf1198.jpg" alt="Jay Chou" class="absolute inset-0 w-full h-full object-cover" loading="lazy" /></div>
+          <div class="jay-photo relative overflow-hidden rounded-sm bg-white/[0.04] border border-white/10" style="aspect-ratio:3/4;"><img src="images/music/7620822d5e2837ca1e8d03248a471701.jpg" alt="Jay Chou" class="absolute inset-0 w-full h-full object-cover" loading="lazy" /></div>
+          <div class="jay-photo relative overflow-hidden rounded-sm bg-white/[0.04] border border-white/10" style="aspect-ratio:3/4;"><img src="images/music/784276901c107204c4833fd4f367e64c.jpg" alt="Jay Chou" class="absolute inset-0 w-full h-full object-cover" loading="lazy" /></div>
+          <div class="jay-photo relative overflow-hidden rounded-sm bg-white/[0.04] border border-white/10" style="aspect-ratio:3/4;"><img src="images/music/793051079cf9e913a5f7f3c46fd87d4c.jpg" alt="Jay Chou" class="absolute inset-0 w-full h-full object-cover" loading="lazy" /></div>
+          <div class="jay-photo relative overflow-hidden rounded-sm bg-white/[0.04] border border-white/10" style="aspect-ratio:3/4;"><img src="images/music/8487b8dad19f8049d0145b358597ca15.jpg" alt="Jay Chou" class="absolute inset-0 w-full h-full object-cover" loading="lazy" /></div>
+          <div class="jay-photo relative overflow-hidden rounded-sm bg-white/[0.04] border border-white/10" style="aspect-ratio:3/4;"><img src="images/music/88eb6ca9cd95a682d55ad3980f08596b.jpg" alt="Jay Chou" class="absolute inset-0 w-full h-full object-cover" loading="lazy" /></div>
+          <div class="jay-photo relative overflow-hidden rounded-sm bg-white/[0.04] border border-white/10" style="aspect-ratio:3/4;"><img src="images/music/8b94c8bd09b1a03047a0bab34ff94101.jpg" alt="Jay Chou" class="absolute inset-0 w-full h-full object-cover" loading="lazy" /></div>
+          <div class="jay-photo relative overflow-hidden rounded-sm bg-white/[0.04] border border-white/10" style="aspect-ratio:3/4;"><img src="images/music/b83ef6ba61c2017ed25dd32b51b62c7f.jpg" alt="Jay Chou" class="absolute inset-0 w-full h-full object-cover" loading="lazy" /></div>
+          <div class="jay-photo relative overflow-hidden rounded-sm bg-white/[0.04] border border-white/10" style="aspect-ratio:3/4;"><img src="images/music/babd1c8c8eab7fceeb5032e122dcb3d5.jpg" alt="Jay Chou" class="absolute inset-0 w-full h-full object-cover" loading="lazy" /></div>
+          <div class="jay-photo relative overflow-hidden rounded-sm bg-white/[0.04] border border-white/10" style="aspect-ratio:3/4;"><img src="images/music/cb6d870de5d4d0ad2a6a4c3460df3f34.jpg" alt="Jay Chou" class="absolute inset-0 w-full h-full object-cover" loading="lazy" /></div>
+          <div class="jay-photo relative overflow-hidden rounded-sm bg-white/[0.04] border border-white/10" style="aspect-ratio:3/4;"><img src="images/music/cfa985dfe36b437bc6019c83d24b182f.jpg" alt="Jay Chou" class="absolute inset-0 w-full h-full object-cover" loading="lazy" /></div>
+          <div class="jay-photo relative overflow-hidden rounded-sm bg-white/[0.04] border border-white/10" style="aspect-ratio:3/4;"><img src="images/music/ea409415c2afeaf8505327c120071679.jpg" alt="Jay Chou" class="absolute inset-0 w-full h-full object-cover" loading="lazy" /></div>
+          <div class="jay-photo relative overflow-hidden rounded-sm bg-white/[0.04] border border-white/10" style="aspect-ratio:3/4;"><img src="images/music/ed9b5e5bf70ef597cef70419c91de1c2.jpg" alt="Jay Chou" class="absolute inset-0 w-full h-full object-cover" loading="lazy" /></div>
+          <div class="jay-photo relative overflow-hidden rounded-sm bg-white/[0.04] border border-white/10" style="aspect-ratio:3/4;"><img src="images/music/f766da74fddad5f0891c0c73f9628ef1.jpg" alt="Jay Chou" class="absolute inset-0 w-full h-full object-cover" loading="lazy" /></div>
+          <div class="jay-photo relative overflow-hidden rounded-sm bg-white/[0.04] border border-white/10" style="aspect-ratio:3/4;"><img src="images/music/fe4c712263f63319d38c804586bcc321.jpg" alt="Jay Chou" class="absolute inset-0 w-full h-full object-cover" loading="lazy" /></div>
+    </div>
+  </div>
+
+  <!-- Bottom strip -->
+  <div class="absolute bottom-0 left-0 right-0 border-t border-white/12 z-10">
+    <div class="px-5 md:px-8 py-5 flex items-end justify-between text-white">
+      <p class="text-base font-semibold max-w-sm leading-snug">耳机里的周杰伦，青春里的每一天。</p>
+      <p class="text-xs text-white/40 hidden sm:block">周杰伦 · Jay Chou</p>
+    </div>
+  </div>
+
+  <p class="section-label text-white/50">05 / Jay Chou</p>
+</section>
+
+<!-- ======================= 7 · SPORTS ======================= -->
+<section id="sports" class="poster-section h-screen bg-[#4F46E5] divider-grid">
+  <h2 id="sportsWord" class="huge-word absolute right-[-3vw] top-1/2 -translate-y-1/2 z-0 text-black/25 select-none text-right">
+    SPORTS
+  </h2>
+  <div class="relative z-10 min-h-screen grid grid-cols-1 lg:grid-cols-2 items-center gap-8 px-5 md:px-8 pt-20 pb-20">
+    <!-- Photo grid 2×2 -->
+    <div id="sportsCard" class="max-w-xl mr-auto space-y-5">
+      <div class="grid grid-cols-2 gap-3 md:gap-4">
+        <div id="sportsPhoto1" class="rounded-lg overflow-hidden bg-white/[0.08] border border-white/25 shadow-[16px_20px_40px_rgba(0,0,0,0.35)] will-change-transform">
+          <img src="images/sports/football.jpg" alt="Football" class="w-full aspect-[4/3] object-cover" loading="lazy" />
+        </div>
+        <div id="sportsPhoto2" class="rounded-lg overflow-hidden bg-white/[0.08] border border-white/25 shadow-[16px_20px_40px_rgba(0,0,0,0.35)] will-change-transform">
+          <img src="images/sports/pingpang.jpg" alt="Ping Pang" class="w-full aspect-[4/3] object-cover" loading="lazy" />
+        </div>
+        <div id="sportsPhoto3" class="rounded-lg overflow-hidden bg-white/[0.08] border border-white/25 shadow-[16px_20px_40px_rgba(0,0,0,0.35)] will-change-transform">
+          <img src="images/sports/fitness.jpg" alt="Fitness" class="w-full aspect-[4/3] object-cover" loading="lazy" />
+        </div>
+        <div id="sportsPhoto4" class="rounded-lg overflow-hidden bg-white/[0.08] border border-white/25 shadow-[16px_20px_40px_rgba(0,0,0,0.35)] will-change-transform">
+          <img src="images/sports/来一张自拍.jpg" alt="Selfie" class="w-full aspect-[4/3] object-cover" loading="lazy" />
+        </div>
+      </div>
+      <div class="bg-[#050505] text-white border border-white/20 p-5 shadow-[-20px_30px_50px_rgba(0,0,0,0.4)]">
+        <p class="display text-xl tracking-tight leading-none">FOOTBALL · PINGPONG · FIT</p>
+        <p class="text-xs text-white/55 mt-3 leading-relaxed">足球场上奔跑、乒乓球桌前对决、健身房里挥汗——运动让生命更有力量。</p>
+      </div>
+    </div>
+    <div class="hidden lg:block"></div>
+  </div>
+  <div class="absolute right-5 md:right-8 top-[24%] z-20 hidden md:block text-right">
+    <p class="display text-[10vw] leading-none tracking-[-0.055em] text-black/30">⚽</p>
+    <p class="text-xs uppercase tracking-[0.18em] max-w-[160px] ml-auto text-white/60">Stay active, stay alive</p>
+  </div>
+  <div class="absolute bottom-0 left-0 right-0 border-t border-white/25 z-10">
+    <div class="px-5 md:px-8 py-5 text-white">
+      <p class="text-base font-semibold">足球 · 乒乓球 · 健身 —— 动静皆宜。</p>
+    </div>
+  </div>
+  <p class="section-label text-white/50">06 / Sports</p>
+</section>
+
+<!-- ======================= 8 · PAWS ======================= -->
+<section id="paws" class="poster-section h-screen bg-[#efe6da] divider-grid dark-lines overflow-hidden">
+  <!-- Warm ambient glow -->
+  <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(245,158,11,0.14),transparent_50%),radial-gradient(circle_at_30%_70%,rgba(244,63,94,0.08),transparent_40%)]"></div>
+
+  <!-- Big PAWS word -->
+  <h2 id="pawsWord" class="huge-word absolute z-0 text-black/[0.05] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none" style="font-size:clamp(10rem,32vw,38rem);">PAWS</h2>
+
+  <!-- Filmstrip container -->
+  <div class="relative z-10 flex flex-col justify-center h-full gap-2 md:gap-4 py-20 md:py-24">
+    <!-- Top strip — smaller, scrolls LEFT -->
+    <div class="paws-strip-wrapper">
+      <div id="pawsStripTop" class="paws-strip paws-strip--small">
+        <img src="images/pets/5e415fa25058ed9a385e4249c1df312e.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/71603a562b900fa9a88ffd1ef90c3702.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/73c467dffd7ac525ef30a198f3db5b50.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/76cdf8fc87a77435b6a05a16004bda5b.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/79c4a89bb69936f51883e1717a1939d8.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/7adc6572bf62a8d4c2562fe4f118589a.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/86587c5ea3ab5f8809af14f71ee1b698.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/973f6543dd872dca8157802905cccee8.jpg" alt="Pet" loading="lazy" />
+      </div>
+    </div>
+    <!-- Middle strip — larger, scrolls RIGHT, 1.jpg & 2.jpg are heroes -->
+    <div class="paws-strip-wrapper">
+      <div id="pawsStripMid" class="paws-strip paws-strip--large">
+        <img src="images/pets/1.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/2.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/14c3d232bd9b549d54d60b0638b109b8.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/275dca3129d4573b200a83b4eb333acf.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/2bef05d52fc12751bc6432517a401312.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/2c99eca91c86cd47395a9a39fe17296d.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/2e8bb76cae76eee389308c91e5c47f9d.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/37e2aea4b41e4d6f92e58ac7e6a3a4b9.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/3cf2a5b65618674be9e43b7d4440aad7.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/4f94186c5bce78a8c50260ac7266d5c7.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/59f3dab2ef89b48e63793477bde44790.jpg" alt="Pet" loading="lazy" />
+      </div>
+    </div>
+    <!-- Bottom strip — smaller, scrolls LEFT -->
+    <div class="paws-strip-wrapper">
+      <div id="pawsStripBot" class="paws-strip paws-strip--small" style="transform:translateX(-10%);">
+        <img src="images/pets/a9cb8e012b0e40af304a110be21f4772.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/ab0bfb480679f9ecb030a5c52edd643b.png" alt="Pet" loading="lazy" />
+        <img src="images/pets/b09809d5abea2c09654920e11495c81d.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/b9bab7f2cacefa6affcdc1a4e78b2f6a.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/c20ebf34303fbcd9a139bde2275150e6.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/c7cd9458504b05078d97522b79e4beb9.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/d7fe66223446a2fc8ee443eb89c40fb2.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/f75768fef60ced454a31e4c8d6c8b4f7.jpg" alt="Pet" loading="lazy" />
+        <img src="images/pets/ff9339c2af45ed5346447dd8d309819f.jpg" alt="Pet" loading="lazy" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom strip -->
+  <div class="absolute bottom-0 left-0 right-0 border-t border-black/15 z-10">
+    <div class="px-5 md:px-8 py-5 flex items-end justify-between text-black">
+      <p class="text-base font-semibold max-w-sm leading-snug">很喜欢小猫和小狗，感谢你们治愈了世界。</p>
+      <p class="text-xs text-black/40 hidden sm:block">Paws · Street cats & dogs</p>
+    </div>
+  </div>
+
+  <!-- Sweep word -->
+  <div id="pawsSweep" class="sweep-word text-black/80">CUTE</div>
+
+  <p class="section-label text-black/40">07 / Paws</p>
+</section>
+
+<!-- ======================= 9 · CONTACT ======================= -->
+<section id="contact" class="poster-section h-screen bg-[#f4efe7] divider-grid dark-lines px-5 md:px-8 flex items-center">
+  <h2 id="contactWord" class="huge-word absolute z-0 text-black/[0.08] left-1/2 top-[44%] -translate-x-1/2 -translate-y-1/2 select-none">
+    CONTACT
+  </h2>
+  <div class="relative z-10 w-full max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 pt-20 pb-20">
+    <!-- Email -->
+    <div id="contactEmail" class="contact-panel">
+      <i data-lucide="mail" class="w-10 h-10 text-white/40" stroke-width="1"></i>
+      <p class="text-xs uppercase tracking-[0.2em] text-white/45">Email</p>
+      <a href="mailto:1503794397@qq.com" class="text-sm text-white/80 hover:text-white transition-colors break-all font-medium">
+        1503794397@qq.com
+      </a>
+    </div>
+    <!-- GitHub -->
+    <div id="contactGithub" class="contact-panel bg-white text-black border-black/15">
+      <i data-lucide="github" class="w-10 h-10 text-black/40" stroke-width="1"></i>
+      <p class="text-xs uppercase tracking-[0.2em] text-black/45">GitHub</p>
+      <a href="https://github.com/sky-k111" target="_blank" rel="noopener" class="text-sm text-black/80 hover:text-black transition-colors font-medium">
+        github.com/sky-k111
+      </a>
+    </div>
+    <!-- WeChat / Social -->
+    <div id="contactSocial" class="contact-panel">
+      <i data-lucide="message-circle" class="w-10 h-10 text-white/40" stroke-width="1"></i>
+      <p class="text-xs uppercase tracking-[0.2em] text-white/45">Social</p>
+      <p class="text-sm text-white/60">欢迎随时联系交流</p>
+    </div>
+  </div>
+  <p class="section-label text-black/50">08 / Contact</p>
+</section>
+
+<!-- ======================= 10 · CTA BUILD-UP ======================= -->
+<section id="cta-build" class="poster-section h-screen bg-[#050505]">
+  <div id="wipeRose" class="absolute inset-0 bg-[#F43F5E] origin-bottom scale-y-0"></div>
+  <div id="wipeEmerald" class="absolute inset-0 bg-[#10B981] origin-left scale-x-0"></div>
+  <div class="sweep-word text-white" id="wordBuild">BUILD</div>
+  <div class="sweep-word text-black" id="wordCreate">CREATE</div>
+  <div class="sweep-word text-white" id="wordConnect">CONNECT</div>
+</section>
+
+<!-- ======================= 11 · FOOTER ======================= -->
+<section id="footer" class="poster-section min-h-screen w-full z-10 flex flex-col bg-[#4F46E5] divider-grid dark-lines">
+  <div class="relative flex-1 min-h-[88vh]">
+    <div class="absolute inset-0 flex items-center justify-center md:justify-start md:pl-[4vw] overflow-hidden z-0">
+      <h2 id="footerWord" class="display text-black/25 text-[44vw] md:text-[32vw] leading-none tracking-[-0.07em] select-none will-change-transform">
+        THANKS
+      </h2>
+    </div>
+    <span id="footerHand" class="hand absolute text-white text-[14vw] md:text-[7vw] left-[32%] md:left-[38%] top-[48%] -rotate-12 select-none drop-shadow-lg z-10">keep building</span>
+    <div class="absolute right-5 md:right-[8vw] top-[28%] md:top-[34%] max-w-xs text-white z-20">
+      <p class="text-lg md:text-xl font-semibold leading-snug">保持好奇，保持热情。<br />未完待续。</p>
+    </div>
+    </div>
+  </div>
+
+  <footer class="relative border-t border-black/25 z-20">
+    <div class="px-5 md:px-8 py-6 grid grid-cols-1 md:grid-cols-3 gap-6 text-white">
+      <div>
+        <p class="text-sm font-semibold">2026 © CHEN YIKAI</p>
+        <a href="mailto:1503794397@qq.com" class="text-sm underline underline-offset-2 hover:opacity-60 transition-opacity">1503794397@qq.com</a>
+        <div class="flex items-center gap-3 mt-3">
+          <a href="https://github.com/sky-k111" target="_blank" rel="noopener" class="hover:opacity-60 transition-opacity" aria-label="GitHub">
+            <i data-lucide="github" class="w-4 h-4" stroke-width="1.5"></i>
+          </a>
+          <a href="mailto:1503794397@qq.com" class="hover:opacity-60 transition-opacity" aria-label="Email">
+            <i data-lucide="mail" class="w-4 h-4" stroke-width="1.5"></i>
+          </a>
+          <a href="#" class="hover:opacity-60 transition-opacity" aria-label="Music">
+            <i data-lucide="music" class="w-4 h-4" stroke-width="1.5"></i>
+          </a>
+        </div>
+      </div>
+      <div class="flex flex-col gap-1.5 text-sm">
+        <a href="#about" class="hover:opacity-60 transition-opacity">About</a>
+        <a href="#projects" class="hover:opacity-60 transition-opacity">Projects</a>
+        <a href="#music" class="hover:opacity-60 transition-opacity">Music</a>
+        <a href="#jay" class="hover:opacity-60 transition-opacity">Jay</a>
+      </div>
+      <div class="flex flex-col gap-1.5 text-sm">
+        <a href="#sports" class="hover:opacity-60 transition-opacity">Sports</a>
+        <a href="#paws" class="hover:opacity-60 transition-opacity">Paws</a>
+            <a href="#contact" class="hover:opacity-60 transition-opacity">Contact</a>
+        <p class="text-white/45 text-xs mt-1">Zhejiang Gongshang University</p>
+      </div>
+    </div>
+  </footer>
+</section>
+
+<script>
+// ── DEBUG: log what loaded ──
+(function() {
+  var gsapOk = typeof gsap !== 'undefined';
+  var stOk = typeof ScrollTrigger !== 'undefined';
+  console.log('[DEBUG] GSAP loaded:', gsapOk ? 'YES v' + (gsap.version || '?') : 'NO');
+  console.log('[DEBUG] ScrollTrigger loaded:', stOk ? 'YES' : 'NO');
+  console.log('[DEBUG] Lucide loaded:', typeof lucide !== 'undefined' ? 'YES' : 'NO');
+  console.log('[DEBUG] User-Agent:', navigator.userAgent);
+  console.log('[DEBUG] svh supported:', typeof CSS !== 'undefined' && CSS.supports ? CSS.supports('height', '100svh') : 'unknown');
+  if (!gsapOk || !stOk) {
+    var b = document.createElement('div');
+    b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#F43F5E;color:#fff;text-align:center;padding:10px;font:14px/1.4 monospace;';
+    b.textContent = '⚠ CDN FAIL: ' + (!gsapOk ? 'GSAP missing ' : '') + (!stOk ? 'ScrollTrigger missing ' : '') + '— scroll effects disabled';
+    document.body.appendChild(b);
+  }
+})();
+
+// Safe init: don't let CDN failures kill the whole page
+if (typeof lucide !== 'undefined') lucide.createIcons();
+if (typeof gsap !== 'undefined') { gsap.registerPlugin(ScrollTrigger); ScrollTrigger.normalizeScroll(true); }
+
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+console.log('[DEBUG] reducedMotion:', reducedMotion);
+
+const noemaLoader = document.querySelector('#noemaLoader');
+console.log('[DEBUG] loader found:', !!noemaLoader);
+
+/* Always remove loader when animations can't run */
+if ((reducedMotion || typeof gsap === 'undefined') && noemaLoader) {
+  console.log('[DEBUG] Skipping animations — reducedMotion=' + reducedMotion + ' gsap=' + (typeof gsap !== 'undefined'));
+  document.body.classList.remove('is-loading');
+  noemaLoader.remove();
+}
+
+if (!reducedMotion && typeof gsap !== 'undefined') {
+  console.log('[DEBUG] Entering GSAP animation block — all good, building timelines...');
+  /* ---------- 0 · Loader ---------- */
+  const loader = document.querySelector('#noemaLoader');
+  gsap.set(['nav', '#heroWord', '#heroCopy'], { autoAlpha: 0 });
+  gsap.set(['#tag1', '#tag2', '#tag3'], { autoAlpha: 0 });
+  gsap.set(['#slamCS', '#slamZJSU', '#slamBuilder'], { autoAlpha: 0 });
+  gsap.set('.loader-letter', { yPercent: 115, autoAlpha: 0 });
+  gsap.set(['.loader-tag', '.loader-meta'], { y: 14, autoAlpha: 0 });
+  gsap.set('.loader-mark svg path', { strokeDasharray: 80, strokeDashoffset: 80 });
+  gsap.set('.loader-scanline', { scaleX: 0 });
+
+  const onLoadTimeline = gsap.timeline({
+    defaults: { ease: 'power3.out' },
+    onComplete: () => {
+      if (loader) loader.remove();
+    }
+  });
+
+  onLoadTimeline
+    .to('.loader-mark svg path', { strokeDashoffset: 0, duration: 0.62, stagger: 0.08, ease: 'power2.out' }, 0)
+    .to('.loader-letter', { yPercent: 0, autoAlpha: 1, duration: 0.64, stagger: 0.035, ease: 'expo.out' }, 0.14)
+    .to('.loader-tag', { y: 0, autoAlpha: 1, duration: 0.44 }, 0.54)
+    .to('.loader-meta', { y: 0, autoAlpha: 1, duration: 0.42 }, 0.66)
+    .to('.loader-brand', { y: -22, scale: 0.94, duration: 0.52, ease: 'power2.inOut' }, 1.05)
+    .to('.loader-scanline', { scaleX: 1, duration: 0.46, ease: 'power2.inOut' }, 1.08)
+    .to('.loader-strip', { scaleY: 1, duration: 0.72, stagger: { each: 0.065, from: 'start' }, ease: 'expo.inOut' }, 1.16)
+    /* Unlock body + refresh ScrollTrigger while loader still covers everything — prevents flash */
+    .call(() => { document.body.classList.remove('is-loading'); ScrollTrigger.refresh(); }, null, 1.6)
+    .to('#noemaLoader', { yPercent: -100, autoAlpha: 0, duration: 0.76, ease: 'expo.inOut' }, 1.82)
+    .fromTo('#heroWord', { autoAlpha: 0, y: 36, scale: 0.94 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.84, ease: 'expo.out' }, 1.72)
+    .to('nav', { autoAlpha: 1, y: 0, duration: 0.48, ease: 'power2.out' }, 1.96)
+    .fromTo('#heroCopy', { y: 30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.62, ease: 'power2.out' }, 2.38);
+
+  /* ---------- 1 · Hero ---------- */
+  const heroTimeline = gsap.timeline({
+    scrollTrigger: { trigger: '#hero', start: 'top top', end: '+=180%', scrub: 1.2, pin: true }
+  });
+  heroTimeline
+    .set('#heroWord', { autoAlpha: 1 }, 0)
+    /* CS — indigo slam from left → out right */
+    .to('#heroWord', { autoAlpha: 0.18, ease: 'power2.out' }, 0.0)
+    .set('#slamCS', { transformOrigin: 'left center', scaleX: 0, autoAlpha: 1 }, 0.0)
+    .to('#slamCS', { scaleX: 1, ease: 'power3.inOut' }, 0.0)
+    .set('#slamCS', { transformOrigin: 'right center' }, 0.06)
+    .to('#slamCS', { scaleX: 0, autoAlpha: 0, ease: 'power3.in' }, 0.06)
+    /* ZJSU — emerald slam from right → out left */
+    .set('#slamZJSU', { transformOrigin: 'right center', scaleX: 0, autoAlpha: 1 }, 0.09)
+    .to('#slamZJSU', { scaleX: 1, ease: 'power3.inOut' }, 0.09)
+    .set('#slamZJSU', { transformOrigin: 'left center' }, 0.15)
+    .to('#slamZJSU', { scaleX: 0, autoAlpha: 0, ease: 'power3.in' }, 0.15)
+    /* Builder — rose slam from bottom → out top */
+    .set('#slamBuilder', { transformOrigin: 'bottom center', scaleY: 0, autoAlpha: 1 }, 0.18)
+    .to('#slamBuilder', { scaleY: 1, ease: 'power3.inOut' }, 0.18)
+    .set('#slamBuilder', { transformOrigin: 'top center' }, 0.24)
+    .to('#slamBuilder', { scaleY: 0, autoAlpha: 0, ease: 'power3.in' }, 0.24)
+    /* Hero word brightens */
+    .to('#heroWord', { autoAlpha: 1, ease: 'power2.out' }, 0.26)
+    /* Tags appear and spread */
+    .fromTo(['#tag1', '#tag2', '#tag3'], { scale: 0, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, stagger: 0.03, ease: 'power2.out' }, 0.30)
+    .to('#tag1', { x: '-20vw', y: '6vh', rotate: -10, scale: 0.92, ease: 'none' }, 0.38)
+    .to('#tag3', { x: '20vw', y: '-6vh', rotate: 10, scale: 0.92, ease: 'none' }, 0.38)
+    .to('#tag2', { y: '-10vh', scale: 1.06, rotate: 2, ease: 'none' }, 0.38)
+    .to('#heroWord', { scale: 1.12, y: '-4vh', ease: 'none' }, 0.38)
+    .to('#heroCopy', { autoAlpha: 0, y: 40, ease: 'none' }, 0.52);
+
+  /* ---------- 2 · About ---------- */
+  const messyStarts = [
+    { x: '-34vw', y: '-26vh', rotate: -16, scale: 0.76 },
+    { x: '28vw', y: '-30vh', rotate: 12, scale: 0.62 },
+    { x: '-14vw', y: '30vh', rotate: 22, scale: 0.7 },
+    { x: '32vw', y: '24vh', rotate: -20, scale: 0.66 },
+    { x: '-38vw', y: '6vh', rotate: 8, scale: 0.6 },
+    { x: '20vw', y: '-8vh', rotate: -10, scale: 0.8 },
+    { x: '-20vw', y: '-4vh', rotate: 26, scale: 0.64 },
+    { x: '38vw', y: '-6vh', rotate: -6, scale: 0.74 },
+    { x: '-28vw', y: '22vh', rotate: -14, scale: 0.66 },
+    { x: '26vw', y: '18vh', rotate: 16, scale: 0.72 }
+  ];
+
+  gsap.set('.manifesto-word', {
+    x: (i) => messyStarts[i] ? messyStarts[i].x : 0,
+    y: (i) => messyStarts[i] ? messyStarts[i].y : 0,
+    rotate: (i) => messyStarts[i] ? messyStarts[i].rotate : 0,
+    scale: (i) => messyStarts[i] ? messyStarts[i].scale : 0.7
+  });
+
+  const aboutTimeline = gsap.timeline({
+    scrollTrigger: { trigger: '#about', start: 'top top', end: '+=170%', scrub: 1, pin: true }
+  });
+  aboutTimeline
+    .to('.manifesto-word', { x: 0, y: 0, rotate: 0, scale: 1, stagger: 0.025, ease: 'none' }, 0)
+    .fromTo('#esfjWord', { autoAlpha: 0, scale: 0.5, rotate: -8 }, { autoAlpha: 1, scale: 1, rotate: 0, duration: 0.6, ease: 'none' }, 0.2)
+    .to('#esfjWord', { scale: 1.08, ease: 'none' }, 0.6)
+    .fromTo('#scorpioWord', { autoAlpha: 0, x: '-16vw', rotate: -28, scale: 0.5 }, { autoAlpha: 1, x: 0, rotate: -12, scale: 1, ease: 'none' }, 0.5);
+
+  /* ---------- 3 · Skills ---------- */
+  const skillsTimeline = gsap.timeline({
+    scrollTrigger: { trigger: '#skills', start: 'top top', end: '+=150%', scrub: 1, pin: true }
+  });
+  skillsTimeline
+    .fromTo('#skillC', { x: '-60vw', y: '-20vh', rotate: -18, scale: 0.6, autoAlpha: 0 }, { x: 0, y: 0, rotate: 0, scale: 1, autoAlpha: 1, ease: 'none' }, 0)
+    .fromTo('#skillCpp', { y: '40vh', scale: 0.5, autoAlpha: 0 }, { y: 0, scale: 1, autoAlpha: 1, ease: 'none' }, 0.12)
+    .fromTo('#skillVibe', { x: '60vw', y: '-15vh', rotate: 18, scale: 0.6, autoAlpha: 0 }, { x: 0, y: 0, rotate: 0, scale: 1, autoAlpha: 1, ease: 'none' }, 0.24)
+    .fromTo('#skillsWord', { y: '8vh', scale: 1.08 }, { y: '-6vh', scale: 1, ease: 'none' }, 0);
+
+  /* ---------- 4 · Projects ---------- */
+  const projectsTimeline = gsap.timeline({
+    scrollTrigger: { trigger: '#projects', start: 'top top', end: '+=190%', scrub: 1, pin: true, invalidateOnRefresh: true }
+  });
+  projectsTimeline
+    .fromTo('.archive-placeholder', {
+      x: (i, el) => { const p = el.parentElement.getBoundingClientRect(); const r = el.getBoundingClientRect(); return p.left + p.width/2 - (r.left + r.width/2); },
+      y: (i, el) => { const p = el.parentElement.getBoundingClientRect(); const r = el.getBoundingClientRect(); return p.top + p.height/2 - (r.top + r.height/2); },
+      scale: (i) => i === 7 ? 1.9 : 0.24,
+      autoAlpha: (i) => i === 7 ? 1 : 0,
+      rotate: (i) => (i - 7) * 3,
+      zIndex: (i) => i === 7 ? 5 : 1
+    }, {
+      x: 0, y: 0, scale: 1, autoAlpha: 1, rotate: 0,
+      stagger: { each: 0.025, from: 'center' },
+      ease: 'none'
+    }, 0)
+    .fromTo('#projectsWord', { y: '8vh', scale: 1.08 }, { y: '-8vh', scale: 0.98, ease: 'none' }, 0);
+
+  /* ---------- 5 · Music ---------- */
+  const musicTimeline = gsap.timeline({
+    scrollTrigger: { trigger: '#music', start: 'top top', end: '+=170%', scrub: 1, pin: true }
+  });
+  musicTimeline
+    .fromTo('#musicCard', { x: '38vw', rotate: 6, scale: 0.88, autoAlpha: 0 }, { x: 0, rotate: 0, scale: 1, autoAlpha: 1, ease: 'none' }, 0)
+    .fromTo('#musicWord', { x: '-6vw', y: '6vh' }, { x: '2vw', y: '-4vh', ease: 'none' }, 0)
+    .from('#musicCard .music-img', { scale: 0.85, autoAlpha: 0, ease: 'none' }, 0.2);
+
+  /* ---------- 6 · Jay Chou ---------- */
+  const jayWordStarts = [
+    { x: '-42vw', y: '-28vh', rotate: -18, scale: 0.6 },
+    { x: '38vw', y: '-32vh', rotate: 14, scale: 0.55 },
+    { x: '-30vw', y: '28vh', rotate: 24, scale: 0.7 },
+    { x: '44vw', y: '22vh', rotate: -22, scale: 0.5 },
+    { x: '-38vw', y: '8vh', rotate: 10, scale: 0.6 },
+    { x: '36vw', y: '-10vh', rotate: -16, scale: 0.65 },
+    { x: '-28vw', y: '-4vh', rotate: 28, scale: 0.55 }
+  ];
+
+  gsap.set('#jaySentence .manifesto-word', {
+    x: (i) => jayWordStarts[i] ? jayWordStarts[i].x : 0,
+    y: (i) => jayWordStarts[i] ? jayWordStarts[i].y : 0,
+    rotate: (i) => jayWordStarts[i] ? jayWordStarts[i].rotate : 0,
+    scale: (i) => jayWordStarts[i] ? jayWordStarts[i].scale : 0.6,
+    autoAlpha: 0
+  });
+
+  gsap.set('.jay-photo', {
+    x: (i) => {
+      const xs = ['-38vw','32vw','-26vw','24vw','-34vw','36vw','-22vw','28vw','-32vw','40vw','-18vw','34vw','-30vw','22vw','-36vw','26vw','-24vw','30vw','-16vw','38vw','-12vw'];
+      return xs[i] || '0vw';
+    },
+    y: (i) => {
+      const ys = ['-6vh','-3vh','20vh','-8vh','14vh','-10vh','22vh','-2vh','28vh','-5vh','-4vh','16vh','-7vh','18vh','12vh','-1vh','15vh','0vh','10vh','2vh','6vh'];
+      return ys[i] || '0vh';
+    },
+    rotate: (i) => {
+      const rs = [-18,14,-24,10,-12,20,-10,16,-14,18,-22,12,-16,24,-8,11,-13,17,-9,15,-11];
+      return rs[i] || 0;
+    },
+    scale: (i) => {
+      const ss = [0.72,0.55,0.84,0.5,0.78,0.62,0.88,0.52,0.74,0.56,0.84,0.68,0.78,0.5,0.92,0.64,0.74,0.58,0.88,0.54,0.78];
+      return ss[i] || 0.7;
+    },
+    autoAlpha: (i) => {
+      const as = [0.35,0.25,0.48,0.2,0.42,0.3,0.5,0.22,0.38,0.28,0.44,0.32,0.4,0.24,0.5,0.3,0.36,0.26,0.46,0.28,0.42];
+      return as[i] || 0.3;
+    }
+  });
+
+  const jayTimeline = gsap.timeline({
+    scrollTrigger: { trigger: '#jay', start: 'top top', end: '+=220%', scrub: 1, pin: true }
+  });
+
+  jayTimeline
+    .to('#jaySentence .manifesto-word', { x: 0, y: 0, rotate: 0, scale: 1, autoAlpha: 1, stagger: 0.028, ease: 'none' }, 0)
+    .fromTo('#jayWord', { y: '12vh', scale: 1.18, autoAlpha: 0 }, { y: '-5vh', scale: 1, autoAlpha: 1, ease: 'none' }, 0.02)
+    .to('.jay-photo', {
+      x: 0, y: 0, rotate: 0, scale: 1, autoAlpha: 1,
+      stagger: { each: 0.018, from: 'random' },
+      ease: 'power1.inOut'
+    }, 0.06)
+    .to('#jayGrid', { scale: 1.03, ease: 'none' }, 0.84)
+    .to('#jaySentence', { y: '-3vh', autoAlpha: 0.6, ease: 'none' }, 0.84);
+
+  /* ---------- 7 · Sports ---------- */
+  const sportsTimeline = gsap.timeline({
+    scrollTrigger: { trigger: '#sports', start: 'top top', end: '+=180%', scrub: 1, pin: true }
+  });
+  sportsTimeline
+    /* 4 photos fly in from 4 directions — same style as Skills */
+    .fromTo('#sportsPhoto1', { x: '-55vw', y: '-10vh', rotate: -14, scale: 0.6, autoAlpha: 0 }, { x: 0, y: 0, rotate: 0, scale: 1, autoAlpha: 1, ease: 'none' }, 0)
+    .fromTo('#sportsPhoto2', { y: '35vh', scale: 0.5, autoAlpha: 0 }, { y: 0, scale: 1, autoAlpha: 1, ease: 'none' }, 0.1)
+    .fromTo('#sportsPhoto3', { x: '55vw', y: '-6vh', rotate: 12, scale: 0.6, autoAlpha: 0 }, { x: 0, y: 0, rotate: 0, scale: 1, autoAlpha: 1, ease: 'none' }, 0.2)
+    .fromTo('#sportsPhoto4', { y: '-35vh', scale: 0.5, autoAlpha: 0 }, { y: 0, scale: 1, autoAlpha: 1, ease: 'none' }, 0.3)
+    /* SPORTS word parallax */
+    .fromTo('#sportsWord', { x: '6vw', y: '6vh' }, { x: '-2vw', y: '-6vh', ease: 'none' }, 0);
+
+  /* ---------- 8 · PAWS ---------- */
+  const pawsTimeline = gsap.timeline({
+    scrollTrigger: { trigger: '#paws', start: 'top top', end: '+=340%', scrub: 1, pin: true }
+  });
+  pawsTimeline
+    /* Top strip: start visible with left padding, scroll left */
+    .fromTo('#pawsStripTop', { x: '4%' }, { x: '-58%', ease: 'none' }, 0)
+    /* Middle strip (largest): start left, scroll right */
+    .fromTo('#pawsStripMid', { x: '0%' }, { x: '52%', ease: 'none' }, 0)
+    /* Bottom strip: start offset right, scroll left */
+    .fromTo('#pawsStripBot', { x: '-8%' }, { x: '-58%', ease: 'none' }, 0)
+    /* PAWS word parallax */
+    .fromTo('#pawsWord', { y: '8vh', scale: 1.12 }, { y: '-6vh', scale: 0.96, ease: 'none' }, 0)
+    /* Sweep word — 遇见 */
+    .fromTo('#pawsSweep', { x: '80vw', autoAlpha: 0, scale: 0.9 }, { x: 0, autoAlpha: 1, scale: 1, ease: 'power2.out' }, 0.58)
+    .to('#pawsSweep', { x: '-80vw', autoAlpha: 0, scale: 1.05, ease: 'power2.in' }, 0.88);
+
+  /* ---------- 9 · Contact ---------- */
+
+
+  const contactTimeline = gsap.timeline({
+    scrollTrigger: { trigger: '#contact', start: 'top top', end: '+=160%', scrub: 1, pin: true }
+  });
+  contactTimeline
+    .fromTo('#contactEmail', { x: '-50vw', y: '6vh', rotate: -8, autoAlpha: 0 }, { x: 0, y: 0, rotate: 0, autoAlpha: 1, ease: 'none' }, 0)
+    .fromTo('#contactGithub', { scale: 0.6, y: '16vh', autoAlpha: 0 }, { scale: 1, y: 0, autoAlpha: 1, ease: 'none' }, 0.16)
+    .fromTo('#contactSocial', { x: '50vw', y: '-6vh', rotate: 8, autoAlpha: 0 }, { x: 0, y: 0, rotate: 0, autoAlpha: 1, ease: 'none' }, 0.32)
+    .fromTo('#contactWord', { y: '8vh', scale: 1.1 }, { y: '-6vh', scale: 0.98, ease: 'none' }, 0);
+
+  /* ---------- 10 · CTA Build-up ---------- */
+  const ctaTimeline = gsap.timeline({
+    scrollTrigger: { trigger: '#cta-build', start: 'top top', end: '+=160%', scrub: 1, pin: true }
+  });
+  ctaTimeline
+    .fromTo('#wordBuild', { x: '-110vw', autoAlpha: 1 }, { x: 0, autoAlpha: 1, ease: 'none' }, 0)
+    .to('#wordBuild', { x: '110vw', autoAlpha: 0, ease: 'none' }, 0.32)
+    .to('#wipeRose', { scaleY: 1, ease: 'none' }, 0.24)
+    .fromTo('#wordCreate', { y: '110vh', autoAlpha: 1 }, { y: 0, autoAlpha: 1, ease: 'none' }, 0.34)
+    .to('#wordCreate', { y: '-110vh', autoAlpha: 0, ease: 'none' }, 0.64)
+    .to('#wipeEmerald', { scaleX: 1, ease: 'none' }, 0.58)
+    .fromTo('#wordConnect', { x: '120vw', autoAlpha: 1 }, { x: 0, autoAlpha: 1, ease: 'none' }, 0.68)
+    .to('#wordConnect', { scale: 1.12, autoAlpha: 0, ease: 'none' }, 0.96);
+
+  /* ---------- 11 · Footer ---------- */
+  const footerTimeline = gsap.timeline({
+    scrollTrigger: { trigger: '#footer', start: 'top 85%', end: 'top 10%', scrub: 1 }
+  });
+  footerTimeline
+    .fromTo('#footerWord', { y: '14vh' }, { y: 0, ease: 'none' }, 0)
+    .from('#footerHand', { autoAlpha: 0, scale: 0.4, rotate: -40, ease: 'none' }, 0.4);
+
+  ScrollTrigger.refresh();
+  console.log('[DEBUG] ScrollTrigger timelines built:', ScrollTrigger.getAll().length);
+} else {
+  console.log('[DEBUG] GSAP block SKIPPED — reducedMotion=' + reducedMotion + ' gsap=' + (typeof gsap !== 'undefined'));
+}
+</script>
+</body>
+</html>

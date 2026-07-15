@@ -1065,44 +1065,103 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
     if (!fine || !tile || !tileImg || !clone || !backdrop) return;
 
     var expanded = false;
+    var visible = false;
+    var cur = null;          // 克隆盒当前状态（唯一事实来源）
+    var cloneTween = null;
 
-    /* GIF 原始比例 fit 进 88vw × 85vh，屏幕居中 */
+    function videoRatio() {
+      return (clone.videoWidth || 16) / (clone.videoHeight || 9);
+    }
+
+    /* 视频原始比例 fit 进 88vw × 85vh，屏幕居中 */
     function targetBox() {
       var vw = window.innerWidth, vh = window.innerHeight;
       var maxW = vw * 0.88, maxH = vh * 0.85;
-      var ratio = (clone.videoWidth || 16) / (clone.videoHeight || 9);
+      var ratio = videoRatio();
       var w = maxW, h = w / ratio;
       if (h > maxH) { h = maxH; w = h * ratio; }
-      return { left: (vw - w) / 2, top: (vh - h) / 2, width: w, height: h };
+      return { left: (vw - w) / 2, top: (vh - h) / 2, width: w, height: h, cropX: 0, cropY: 0 };
+    }
+
+    /* 格子 cover 裁切下视频完整画面占据的矩形；crop = 被裁掉的边宽（防跳变） */
+    function frameBox() {
+      var r = tile.getBoundingClientRect();
+      var ratio = videoRatio();
+      var w, h;
+      if (ratio > r.width / r.height) { h = r.height; w = h * ratio; }
+      else { w = r.width; h = w / ratio; }
+      return {
+        left: r.left + (r.width - w) / 2,
+        top: r.top + (r.height - h) / 2,
+        width: w, height: h,
+        cropX: (w - r.width) / 2,
+        cropY: (h - r.height) / 2
+      };
+    }
+
+    function setBox(b) {
+      cur = b;
+      gsap.set(clone, {
+        left: b.left, top: b.top, width: b.width, height: b.height,
+        clipPath: 'inset(' + b.cropY + 'px ' + b.cropX + 'px)'
+      });
+    }
+
+    /* 每帧重算目标并插值——滚动/缩放中目标移动也实时跟随 */
+    function animateTo(getTarget, dur, ease, onDone) {
+      if (cloneTween) cloneTween.kill();
+      var from = cur;
+      var st = { p: 0 };
+      cloneTween = gsap.to(st, {
+        p: 1, duration: dur, ease: ease,
+        onUpdate: function () {
+          var t = getTarget(), p = st.p;
+          setBox({
+            left: from.left + (t.left - from.left) * p,
+            top: from.top + (t.top - from.top) * p,
+            width: from.width + (t.width - from.width) * p,
+            height: from.height + (t.height - from.height) * p,
+            cropX: from.cropX + (t.cropX - from.cropX) * p,
+            cropY: from.cropY + (t.cropY - from.cropY) * p
+          });
+        },
+        onComplete: onDone
+      });
     }
 
     function expand() {
       if (expanded) return;
       expanded = true;
-      var r = tile.getBoundingClientRect();
-      try { clone.currentTime = tileImg.currentTime; } catch (e) {}
-      gsap.set(clone, { display: 'block', left: r.left, top: r.top, width: r.width, height: r.height });
+      if (!visible) {
+        setBox(frameBox());
+        try { clone.currentTime = tileImg.currentTime; } catch (e) {}
+      }
+      visible = true;
+      gsap.set(clone, { display: 'block' });
       gsap.set(tileImg, { opacity: 0 });
-      var t = targetBox();
-      gsap.to(clone, { left: t.left, top: t.top, width: t.width, height: t.height, duration: 0.45, ease: 'power3.out', overwrite: true });
+      animateTo(targetBox, 0.45, 'power3.out', null);
       gsap.to(backdrop, { autoAlpha: 1, duration: 0.35, overwrite: true });
     }
 
     function collapse() {
       if (!expanded) return;
       expanded = false;
-      var r = tile.getBoundingClientRect();
-      gsap.to(clone, {
-        left: r.left, top: r.top, width: r.width, height: r.height,
-        duration: 0.4, ease: 'power3.inOut', overwrite: true,
-        onComplete: function () {
-          if (!expanded) { gsap.set(clone, { display: 'none' }); gsap.set(tileImg, { opacity: 1 }); }
+      animateTo(frameBox, 0.4, 'power3.inOut', function () {
+        if (!expanded) {
+          visible = false;
+          gsap.set(clone, { display: 'none' });
+          gsap.set(tileImg, { opacity: 1 });
         }
       });
       gsap.to(backdrop, { autoAlpha: 0, duration: 0.35, overwrite: true });
     }
 
+    window.addEventListener('resize', function () {
+      if (expanded) animateTo(targetBox, 0.25, 'power2.out', null);
+    });
+
     tile.addEventListener('mouseenter', expand);
+    clone.addEventListener('mouseenter', expand);
     clone.addEventListener('mouseleave', collapse);
     clone.addEventListener('click', function () {
       window.open('https://github.com/sky-k111/ai-name', '_blank', 'noopener');

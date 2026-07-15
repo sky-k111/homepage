@@ -1036,7 +1036,7 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
 
   /* ---------- 4 · Projects ---------- */
   const projectsTimeline = gsap.timeline({
-    scrollTrigger: { trigger: '#projects', start: 'top top', end: '+=190%', scrub: 1, pin: true, invalidateOnRefresh: true }
+    scrollTrigger: { trigger: '#projects', start: 'top top', end: '+=240%', scrub: 1, pin: true, invalidateOnRefresh: true }
   });
   projectsTimeline
     .fromTo('.archive-placeholder', {
@@ -1051,7 +1051,9 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
       stagger: { each: 0.025, from: 'center' },
       ease: 'none'
     }, 0)
-    .fromTo('#projectsWord', { y: '8vh', scale: 1.08 }, { y: '-8vh', scale: 0.98, ease: 'none' }, 0);
+    .fromTo('#projectsWord', { y: '8vh', scale: 1.08 }, { y: '-8vh', scale: 0.98, ease: 'none' }, 0)
+    /* 归位后按住一段滚动距离，下一屏晚些出现 */
+    .to({}, { duration: 0.35 });
 
   /* ---------- 4b · Projects GIF hover 放大 ---------- */
   (function () {

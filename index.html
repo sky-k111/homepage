@@ -581,7 +581,7 @@ body.is-loading {
     PROJECTS
   </h2>
   <div class="archive-grid">
-    <a id="gifTile" class="archive-placeholder block overflow-hidden" href="https://github.com/sky-k111/ai-name" target="_blank" rel="noopener noreferrer"><img id="gifTileImg" src="images/projects/ai-naming.gif" alt="AI 智能取名" class="w-full h-full object-cover pointer-events-none" /></a><div class="archive-placeholder"></div><div class="archive-placeholder"></div>
+    <a id="gifTile" class="archive-placeholder block overflow-hidden" href="https://github.com/sky-k111/ai-name" target="_blank" rel="noopener noreferrer"><video id="gifTileImg" src="images/projects/ai-naming.mp4" autoplay loop muted playsinline aria-label="AI 智能取名" class="w-full h-full object-cover pointer-events-none"></video></a><div class="archive-placeholder"></div><div class="archive-placeholder"></div>
     <div class="archive-placeholder"></div><div class="archive-placeholder"></div><div class="archive-placeholder"></div>
     <div class="archive-placeholder"></div><div class="archive-placeholder"></div><div class="archive-placeholder"></div>
     <div class="archive-placeholder"></div><div class="archive-placeholder"></div><div class="archive-placeholder"></div>
@@ -891,7 +891,7 @@ body.is-loading {
 
 <!-- Projects GIF hover 放大克隆层 -->
 <div id="gifBackdrop" class="fixed inset-0 z-[90] bg-black/85 opacity-0 pointer-events-none"></div>
-<img id="gifClone" src="images/projects/ai-naming.gif" alt="AI 智能取名" class="fixed z-[91] hidden cursor-pointer" />
+<video id="gifClone" src="images/projects/ai-naming.mp4" autoplay loop muted playsinline aria-label="AI 智能取名" class="fixed z-[91] hidden cursor-pointer"></video>
 
 <script>
 // ── DEBUG: log what loaded ──
@@ -1070,7 +1070,7 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
     function targetBox() {
       var vw = window.innerWidth, vh = window.innerHeight;
       var maxW = vw * 0.88, maxH = vh * 0.85;
-      var ratio = (clone.naturalWidth || 4) / (clone.naturalHeight || 3);
+      var ratio = (clone.videoWidth || 16) / (clone.videoHeight || 9);
       var w = maxW, h = w / ratio;
       if (h > maxH) { h = maxH; w = h * ratio; }
       return { left: (vw - w) / 2, top: (vh - h) / 2, width: w, height: h };
@@ -1080,6 +1080,7 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
       if (expanded) return;
       expanded = true;
       var r = tile.getBoundingClientRect();
+      try { clone.currentTime = tileImg.currentTime; } catch (e) {}
       gsap.set(clone, { display: 'block', left: r.left, top: r.top, width: r.width, height: r.height });
       gsap.set(tileImg, { opacity: 0 });
       var t = targetBox();

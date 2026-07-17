@@ -264,15 +264,13 @@ body.is-loading {
   left: 50%;
   transform: translateX(-50%);
   z-index: 4;
-  width: 34px;
-  height: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   color: white;
   opacity: 0.9;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: lowercase;
 }
-.loader-mark svg { width: 34px; height: 18px; overflow: visible; }
 .loader-brand {
   position: relative;
   z-index: 5;
@@ -424,12 +422,7 @@ body.is-loading {
 <!-- ======================= LOADER ======================= -->
 <div id="noemaLoader" class="noema-loader" aria-hidden="true">
   <div class="loader-grid"></div>
-  <div class="loader-mark">
-    <svg viewBox="0 0 42 18" fill="none" aria-hidden="true">
-      <path d="M3 9C8 1.8 14 1.8 21 9C28 16.2 34 16.2 39 9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></path>
-      <path d="M3 9C8 16.2 14 16.2 21 9C28 1.8 34 1.8 39 9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity="0.55"></path>
-    </svg>
-  </div>
+  <div class="loader-mark">cyk</div>
   <div class="loader-brand">
     <div class="loader-brand-main" aria-label="CHENYIKAI">
       <span class="loader-letter">C</span><span class="loader-letter">H</span><span class="loader-letter">E</span><span class="loader-letter">N</span>
@@ -940,7 +933,7 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
   gsap.set(['#slamCS', '#slamZJSU', '#slamBuilder'], { autoAlpha: 0 });
   gsap.set('.loader-letter', { yPercent: 115, autoAlpha: 0 });
   gsap.set(['.loader-tag', '.loader-meta'], { y: 14, autoAlpha: 0 });
-  gsap.set('.loader-mark svg path', { strokeDasharray: 80, strokeDashoffset: 80 });
+  gsap.set('.loader-mark', { autoAlpha: 0 });
   gsap.set('.loader-scanline', { scaleX: 0 });
 
   const onLoadTimeline = gsap.timeline({
@@ -951,7 +944,7 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
   });
 
   onLoadTimeline
-    .to('.loader-mark svg path', { strokeDashoffset: 0, duration: 0.62, stagger: 0.08, ease: 'power2.out' }, 0)
+    .to('.loader-mark', { autoAlpha: 0.9, duration: 0.62, ease: 'power2.out' }, 0)
     .to('.loader-letter', { yPercent: 0, autoAlpha: 1, duration: 0.64, stagger: 0.035, ease: 'expo.out' }, 0.14)
     .to('.loader-tag', { y: 0, autoAlpha: 1, duration: 0.44 }, 0.54)
     .to('.loader-meta', { y: 0, autoAlpha: 1, duration: 0.42 }, 0.66)

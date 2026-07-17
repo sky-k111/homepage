@@ -291,6 +291,7 @@ body.is-loading {
   font-family: 'Anton', sans-serif;
   font-size: clamp(2.6rem, 10vw, 10rem);
   line-height: 0.78;
+  padding-top: 0.12em; /* line-height<1时Anton大写字母顶部超出行盒，被overflow:hidden裁平——按字号等比留头部空间 */
   letter-spacing: -0.055em;
   text-transform: uppercase;
   white-space: nowrap;

@@ -11,9 +11,12 @@
 <script src="vendor/lucide.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<!-- 字体非阻塞加载：网络不通时也不卡首屏，先用回退字体渲染 -->
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Caveat:wght@600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
-<noscript><link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Caveat:wght@600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet" /></noscript>
+<!-- 开场英文字体本地化：秒加载，无字体交换跳变 -->
+<link rel="preload" href="vendor/fonts/anton.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="stylesheet" href="vendor/fonts.css" />
+<!-- 中文字体远程异步：网络不通也不卡首屏 -->
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet" /></noscript>
 <style>
 :root {
   --indigo: #4F46E5;
@@ -989,20 +992,12 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
   });
 
   onLoadTimeline
-    .to('.loader-mark', { autoAlpha: 0.9, duration: 0.62, ease: 'power2.out' }, 0)
-    .to('.loader-letter', { yPercent: 0, autoAlpha: 1, duration: 0.64, stagger: 0.035, ease: 'expo.out' }, 0.14)
+    .to('.loader-mark', { autoAlpha: 0.9, duration: 0.62, ease: 'power2.out' }, 0)    .to('.loader-letter', { yPercent: 0, autoAlpha: 1, duration: 0.64, stagger: 0.035, ease: 'expo.out' }, 0.14)
     .to('.loader-tag', { y: 0, autoAlpha: 1, duration: 0.44 }, 0.54)
     .to('.loader-meta', { y: 0, autoAlpha: 1, duration: 0.42 }, 0.66)
     .to('.loader-brand', { y: -22, scale: 0.94, duration: 0.52, ease: 'power2.inOut' }, 1.05)
     .to('.loader-scanline', { scaleX: 1, duration: 0.46, ease: 'power2.inOut' }, 1.08)
     .to('.loader-strip', { scaleY: 1, duration: 0.72, stagger: { each: 0.065, from: 'start' }, ease: 'expo.inOut' }, 1.16)
-    /* 重活（解锁+refresh+恢复滚动位置）放t=0.01：loader刚盖上就干完，后段动画全程无阻塞 */
-    .call(() => {
-      document.body.classList.remove('is-loading');
-      ScrollTrigger.refresh();
-      var y = parseFloat(sessionStorage.getItem('cykScrollY') || '0');
-      if (y > 0) window.scrollTo(0, y);
-    }, null, 0.01)
     .to('#noemaLoader', { yPercent: -100, autoAlpha: 0, duration: 0.76, ease: 'expo.inOut' }, 1.82)
     .fromTo('#heroWord', { autoAlpha: 0, y: 36, scale: 0.94 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.84, ease: 'expo.out' }, 1.72)
     .to('nav', { autoAlpha: 1, y: 0, duration: 0.48, ease: 'power2.out' }, 1.96)
@@ -1384,7 +1379,12 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
     ScrollTrigger.create({ trigger: '#footer', start: 'top 60%', once: true, onEnter: startSig });
   })();
 
+  /* 解锁滚动+全量refresh+恢复滚动位置：脚本初始化阶段同步完成（loader盖着、动画首帧之前），
+     之后loader动画全程主线程无重活 */
+  document.body.classList.remove('is-loading');
   ScrollTrigger.refresh();
+  var restoreY = parseFloat(sessionStorage.getItem('cykScrollY') || '0');
+  if (restoreY > 0) window.scrollTo(0, restoreY);
   console.log('[DEBUG] ScrollTrigger timelines built:', ScrollTrigger.getAll().length);
 } else {
   console.log('[DEBUG] GSAP block SKIPPED — reducedMotion=' + reducedMotion + ' gsap=' + (typeof gsap !== 'undefined'));

@@ -1335,9 +1335,9 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
     if (!sigPaths.length) return;
     var total = 0;
     var lens = sigPaths.map(function (p) { var L = p.getTotalLength(); total += L; return L; });
-    /* 动画前完全隐藏每一笔（dashoffset 多留 1px，防圆头笔帽漏出起点圆点） */
+    /* 动画前完全隐藏每一笔：dasharray/offset 都取 L+2，起点和末端都不会漏圆头笔帽的白点 */
     sigPaths.forEach(function (p, i) {
-      gsap.set(p, { strokeDasharray: lens[i], strokeDashoffset: lens[i] + 1, visibility: 'hidden' });
+      gsap.set(p, { strokeDasharray: lens[i] + 2, strokeDashoffset: lens[i] + 2, visibility: 'hidden' });
     });
     var sigTl = gsap.timeline({ paused: true });
     var t = 0, DUR = 2.5, GAP = 0.06;

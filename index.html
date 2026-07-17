@@ -1000,8 +1000,7 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
     .to('.loader-tag', { y: 0, autoAlpha: 1, duration: 0.44 }, 0.54)
     .to('.loader-meta', { y: 0, autoAlpha: 1, duration: 0.42 }, 0.66)
     .to('.loader-brand', { y: -22, scale: 0.94, duration: 0.52, ease: 'power2.inOut' }, 1.05)
-    .to('.loader-scanline', { scaleX: 1, duration: 0.46, ease: 'power2.inOut' }, 1.08)
-    .to('.loader-strip', { scaleY: 1, duration: 0.72, stagger: { each: 0.065, from: 'start' }, ease: 'expo.inOut' }, 1.16);
+    .to('.loader-scanline', { scaleX: 1, duration: 0.46, ease: 'power2.inOut' }, 1.08);
 
   const exitTl = gsap.timeline({
     paused: true,
@@ -1009,10 +1008,12 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
     onComplete: () => { if (loader) loader.remove(); }
   });
   exitTl
-    .fromTo('#heroWord', { autoAlpha: 0, y: 36, scale: 0.94 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.84, ease: 'expo.out' }, 0)
-    .to('#noemaLoader', { yPercent: -100, autoAlpha: 0, duration: 0.76, ease: 'expo.inOut' }, 0.10)
-    .to('nav', { autoAlpha: 1, y: 0, duration: 0.48, ease: 'power2.out' }, 0.24)
-    .fromTo('#heroCopy', { y: 30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.62, ease: 'power2.out' }, 0.66);
+    /* 彩条擦拭是掀开的前奏：等待期停在深色画面，百分比清晰可读 */
+    .to('.loader-strip', { scaleY: 1, duration: 0.72, stagger: { each: 0.065, from: 'start' }, ease: 'expo.inOut' }, 0)
+    .fromTo('#heroWord', { autoAlpha: 0, y: 36, scale: 0.94 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.84, ease: 'expo.out' }, 0.56)
+    .to('#noemaLoader', { yPercent: -100, autoAlpha: 0, duration: 0.76, ease: 'expo.inOut' }, 0.66)
+    .to('nav', { autoAlpha: 1, y: 0, duration: 0.48, ease: 'power2.out' }, 0.80)
+    .fromTo('#heroCopy', { y: 30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.62, ease: 'power2.out' }, 1.22);
 
   var introDone = false, assetsDone = false, exited = false;
   function maybeExit() {

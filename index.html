@@ -1339,9 +1339,7 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
     sigPaths.forEach(function (p, i) {
       gsap.set(p, { strokeDasharray: lens[i], strokeDashoffset: lens[i] + 1, visibility: 'hidden' });
     });
-    var sigTl = gsap.timeline({
-      scrollTrigger: { trigger: '#footer', start: 'top 60%', once: true }
-    });
+    var sigTl = gsap.timeline({ paused: true });
     var t = 0, DUR = 2.5, GAP = 0.06;
     sigPaths.forEach(function (p, i) {
       var d = Math.max(0.08, DUR * lens[i] / total);
@@ -1349,6 +1347,12 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
            .to(p, { strokeDashoffset: 0, duration: d, ease: 'power1.inOut' }, t);
       t += d + GAP;
     });
+    /* 刷新时若已停在footer，触发会在loader还盖着屏幕时就到——等loader移除再落笔 */
+    function startSig() {
+      if (document.getElementById('noemaLoader')) { gsap.delayedCall(0.25, startSig); return; }
+      sigTl.play();
+    }
+    ScrollTrigger.create({ trigger: '#footer', start: 'top 60%', once: true, onEnter: startSig });
   })();
 
   ScrollTrigger.refresh();

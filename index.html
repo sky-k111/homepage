@@ -1028,16 +1028,22 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
     urls.push('images/projects/ai-naming.mp4');
     urls = Array.from(new Set(urls));
     var total = urls.length, done = 0, finished = false;
+    /* 显示值平滑追赶真实进度：缓存秒完时也有0→100爬升过程 */
+    var shown = { v: 0 };
+    function render() { if (counter) counter.textContent = '加载中 ' + Math.round(shown.v) + '%'; }
+    function show(pct, onDone) {
+      gsap.to(shown, { v: pct, duration: 0.5, ease: 'power1.out', overwrite: true, onUpdate: render, onComplete: onDone || null });
+    }
     function finish() {
       if (finished) return;
       finished = true;
-      if (counter) counter.textContent = '加载中 100%';
-      assetsDone = true; maybeExit();
+      show(100, function () { assetsDone = true; maybeExit(); });
     }
     function step() {
       done++;
-      if (!finished && counter) counter.textContent = '加载中 ' + Math.round(done / total * 100) + '%';
+      if (finished) return;
       if (done >= total) finish();
+      else show(Math.round(done / total * 100));
     }
     urls.forEach(function (u) {
       if (/\.mp4$/i.test(u)) {

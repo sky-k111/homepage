@@ -230,7 +230,7 @@ body {
 
 /* ======================= LOADER ======================= */
 html {
-  scrollbar-gutter: stable; /* 预留滚动条位置，loader解锁滚动时页面不左移 */
+  overflow-y: scroll; /* 滚动条常驻：视口宽度恒定，fixed元素与页面内容居中一致，开场不横移 */
 }
 body.is-loading {
   height: 100svh;

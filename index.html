@@ -455,7 +455,7 @@ body.is-loading {
   </div>
   <div class="loader-meta">
     <span>ZJSU / Computer Science</span>
-    <span>Loading presence</span>
+    <span id="loadPct">加载中 0%</span>
   </div>
   <div class="loader-strips">
     <span class="loader-strip"></span><span class="loader-strip"></span><span class="loader-strip"></span><span class="loader-strip"></span><span class="loader-strip"></span><span class="loader-strip"></span><span class="loader-strip"></span>
@@ -989,24 +989,66 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
   gsap.set('.loader-mark', { autoAlpha: 0 });
   gsap.set('.loader-scanline', { scaleX: 0 });
 
-  const onLoadTimeline = gsap.timeline({
+  /* 开场拆两段：introTl播完 + 资源预载完(或15s超时) 双条件满足才掀开 */
+  const introTl = gsap.timeline({
     defaults: { ease: 'power3.out' },
-    onComplete: () => {
-      if (loader) loader.remove();
-    }
+    onComplete: () => { introDone = true; maybeExit(); }
   });
-
-  onLoadTimeline
-    .to('.loader-mark', { autoAlpha: 0.9, duration: 0.62, ease: 'power2.out' }, 0)    .to('.loader-letter', { yPercent: 0, autoAlpha: 1, duration: 0.64, stagger: 0.035, ease: 'expo.out' }, 0.14)
+  introTl
+    .to('.loader-mark', { autoAlpha: 0.9, duration: 0.62, ease: 'power2.out' }, 0)
+    .to('.loader-letter', { yPercent: 0, autoAlpha: 1, duration: 0.64, stagger: 0.035, ease: 'expo.out' }, 0.14)
     .to('.loader-tag', { y: 0, autoAlpha: 1, duration: 0.44 }, 0.54)
     .to('.loader-meta', { y: 0, autoAlpha: 1, duration: 0.42 }, 0.66)
     .to('.loader-brand', { y: -22, scale: 0.94, duration: 0.52, ease: 'power2.inOut' }, 1.05)
     .to('.loader-scanline', { scaleX: 1, duration: 0.46, ease: 'power2.inOut' }, 1.08)
-    .to('.loader-strip', { scaleY: 1, duration: 0.72, stagger: { each: 0.065, from: 'start' }, ease: 'expo.inOut' }, 1.16)
-    .to('#noemaLoader', { yPercent: -100, autoAlpha: 0, duration: 0.76, ease: 'expo.inOut' }, 1.82)
-    .fromTo('#heroWord', { autoAlpha: 0, y: 36, scale: 0.94 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.84, ease: 'expo.out' }, 1.72)
-    .to('nav', { autoAlpha: 1, y: 0, duration: 0.48, ease: 'power2.out' }, 1.96)
-    .fromTo('#heroCopy', { y: 30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.62, ease: 'power2.out' }, 2.38);
+    .to('.loader-strip', { scaleY: 1, duration: 0.72, stagger: { each: 0.065, from: 'start' }, ease: 'expo.inOut' }, 1.16);
+
+  const exitTl = gsap.timeline({
+    paused: true,
+    defaults: { ease: 'power3.out' },
+    onComplete: () => { if (loader) loader.remove(); }
+  });
+  exitTl
+    .fromTo('#heroWord', { autoAlpha: 0, y: 36, scale: 0.94 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.84, ease: 'expo.out' }, 0)
+    .to('#noemaLoader', { yPercent: -100, autoAlpha: 0, duration: 0.76, ease: 'expo.inOut' }, 0.10)
+    .to('nav', { autoAlpha: 1, y: 0, duration: 0.48, ease: 'power2.out' }, 0.24)
+    .fromTo('#heroCopy', { y: 30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.62, ease: 'power2.out' }, 0.66);
+
+  var introDone = false, assetsDone = false, exited = false;
+  function maybeExit() {
+    if (introDone && assetsDone && !exited) { exited = true; exitTl.play(); }
+  }
+
+  /* ---------- 0b · 全量预载 + 进度 ---------- */
+  (function () {
+    var counter = document.getElementById('loadPct');
+    var urls = [];
+    document.querySelectorAll('img[src]').forEach(function (im) { urls.push(im.getAttribute('src')); });
+    urls.push('images/projects/ai-naming.mp4');
+    urls = Array.from(new Set(urls));
+    var total = urls.length, done = 0, finished = false;
+    function finish() {
+      if (finished) return;
+      finished = true;
+      if (counter) counter.textContent = '加载中 100%';
+      assetsDone = true; maybeExit();
+    }
+    function step() {
+      done++;
+      if (!finished && counter) counter.textContent = '加载中 ' + Math.round(done / total * 100) + '%';
+      if (done >= total) finish();
+    }
+    urls.forEach(function (u) {
+      if (/\.mp4$/i.test(u)) {
+        fetch(u).then(function (r) { return r.blob(); }).then(step, step);
+      } else {
+        var im = new Image();
+        im.onload = im.onerror = step;
+        im.src = u;
+      }
+    });
+    setTimeout(finish, 15000); /* 弱网超时放行，剩余资源后台继续加载 */
+  })();
 
   /* ---------- 1 · Hero ---------- */
   const heroTimeline = gsap.timeline({

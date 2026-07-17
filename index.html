@@ -229,6 +229,9 @@ body {
 }
 
 /* ======================= LOADER ======================= */
+html {
+  scrollbar-gutter: stable; /* 预留滚动条位置，loader解锁滚动时页面不左移 */
+}
 body.is-loading {
   height: 100svh;
   overflow: hidden;

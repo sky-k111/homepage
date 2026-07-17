@@ -982,7 +982,6 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
   gsap.set(['nav', '#heroWord', '#heroCopy'], { autoAlpha: 0 });
   gsap.set(['#tag1', '#tag2', '#tag3'], { autoAlpha: 0 });
   gsap.set(['#slamCS', '#slamZJSU', '#slamBuilder'], { autoAlpha: 0 });
-  gsap.set(['#skillPython', '#skillVue'], { autoAlpha: 0 });
   gsap.set('.loader-letter', { yPercent: 115, autoAlpha: 0 });
   gsap.set(['.loader-tag', '.loader-meta'], { y: 14, autoAlpha: 0 });
   gsap.set('.loader-mark', { autoAlpha: 0 });
@@ -1071,7 +1070,7 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
 
   /* ---------- 3 · Skills ---------- */
   const skillsTimeline = gsap.timeline({
-    scrollTrigger: { trigger: '#skills', start: 'top top', end: '+=150%', scrub: 1, pin: true }
+    scrollTrigger: { trigger: '#skills', start: 'top top', end: '+=200%', scrub: 1, pin: true }
   });
   skillsTimeline
     .fromTo('#skillC', { x: '-60vw', y: '-20vh', rotate: -18, scale: 0.6, autoAlpha: 0 }, { x: 0, y: 0, rotate: 0, scale: 1, autoAlpha: 1, ease: 'none' }, 0)
@@ -1079,7 +1078,9 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
     .fromTo('#skillVibe', { x: '60vw', y: '-15vh', rotate: 18, scale: 0.6, autoAlpha: 0 }, { x: 0, y: 0, rotate: 0, scale: 1, autoAlpha: 1, ease: 'none' }, 0.24)
     .fromTo('#skillPython', { x: '-24vw', y: '5vh', rotate: -7, scale: 0.5, autoAlpha: 0 }, { x: 0, y: 0, rotate: 0, scale: 1, autoAlpha: 1, ease: 'none' }, 0.30)
     .fromTo('#skillVue', { x: '32vw', y: '-4vh', rotate: 10, scale: 0.5, autoAlpha: 0 }, { x: 0, y: 0, rotate: 0, scale: 1, autoAlpha: 1, ease: 'none' }, 0.34)
-    .fromTo('#skillsWord', { y: '8vh', scale: 1.08 }, { y: '-6vh', scale: 1, ease: 'none' }, 0);
+    .fromTo('#skillsWord', { y: '8vh', scale: 1.08 }, { y: '-6vh', scale: 1, ease: 'none' }, 0)
+    /* hold: 标签归位后按住一段，下一页晚些出现 */
+    .to({}, { duration: 0.25 });
 
   /* ---------- 4 · Projects ---------- */
   const projectsTimeline = gsap.timeline({

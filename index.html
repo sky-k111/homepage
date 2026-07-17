@@ -593,7 +593,7 @@ body.is-loading {
     PROJECTS
   </h2>
   <div class="archive-grid">
-    <a id="gifTile" class="archive-placeholder block overflow-hidden" href="https://github.com/sky-k111/ai-name" target="_blank" rel="noopener noreferrer"><video id="gifTileImg" src="images/projects/ai-naming.mp4" autoplay loop muted playsinline aria-label="AI 智能取名" class="w-full h-full object-cover pointer-events-none"></video></a><div class="archive-placeholder"></div><div class="archive-placeholder"></div>
+    <a id="gifTile" class="archive-placeholder block overflow-hidden" href="https://github.com/sky-k111/ai-name" target="_blank" rel="noopener noreferrer"><video id="gifTileImg" src="images/projects/ai-naming.mp4" loop muted playsinline preload="metadata" aria-label="AI 智能取名" class="w-full h-full object-cover pointer-events-none"></video></a><div class="archive-placeholder"></div><div class="archive-placeholder"></div>
     <div class="archive-placeholder"></div><div class="archive-placeholder"></div><div class="archive-placeholder"></div>
     <div class="archive-placeholder"></div><div class="archive-placeholder"></div><div class="archive-placeholder"></div>
     <div class="archive-placeholder"></div><div class="archive-placeholder"></div><div class="archive-placeholder"></div>
@@ -924,7 +924,7 @@ body.is-loading {
 
 <!-- Projects GIF hover 放大克隆层 -->
 <div id="gifBackdrop" class="fixed inset-0 z-[90] bg-black/85 opacity-0 pointer-events-none"></div>
-<video id="gifClone" src="images/projects/ai-naming.mp4" autoplay loop muted playsinline aria-label="AI 智能取名" class="fixed z-[91] hidden cursor-pointer"></video>
+<video id="gifClone" src="images/projects/ai-naming.mp4" loop muted playsinline preload="none" aria-label="AI 智能取名" class="fixed z-[91] hidden cursor-pointer"></video>
 
 <script>
 // ── DEBUG: log what loaded ──
@@ -996,14 +996,13 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
     .to('.loader-brand', { y: -22, scale: 0.94, duration: 0.52, ease: 'power2.inOut' }, 1.05)
     .to('.loader-scanline', { scaleX: 1, duration: 0.46, ease: 'power2.inOut' }, 1.08)
     .to('.loader-strip', { scaleY: 1, duration: 0.72, stagger: { each: 0.065, from: 'start' }, ease: 'expo.inOut' }, 1.16)
-    /* Unlock body + refresh ScrollTrigger while loader still covers everything — prevents flash */
+    /* 重活（解锁+refresh+恢复滚动位置）放t=0.01：loader刚盖上就干完，后段动画全程无阻塞 */
     .call(() => {
       document.body.classList.remove('is-loading');
       ScrollTrigger.refresh();
-      /* loader还盖着时跳回刷新前位置，掀开即落位无闪跳 */
       var y = parseFloat(sessionStorage.getItem('cykScrollY') || '0');
       if (y > 0) window.scrollTo(0, y);
-    }, null, 1.6)
+    }, null, 0.01)
     .to('#noemaLoader', { yPercent: -100, autoAlpha: 0, duration: 0.76, ease: 'expo.inOut' }, 1.82)
     .fromTo('#heroWord', { autoAlpha: 0, y: 36, scale: 0.94 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.84, ease: 'expo.out' }, 1.72)
     .to('nav', { autoAlpha: 1, y: 0, duration: 0.48, ease: 'power2.out' }, 1.96)
@@ -1109,7 +1108,19 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
     var tileImg = document.getElementById('gifTileImg');
     var clone = document.getElementById('gifClone');
     var backdrop = document.getElementById('gifBackdrop');
-    if (!fine || !tile || !tileImg || !clone || !backdrop) return;
+    if (!tile || !tileImg || !clone || !backdrop) return;
+
+    /* 视频懒播放：Projects进视口才解码播放，开场/其他区域不耗CPU */
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        if (entries[0].isIntersecting) { tileImg.play().catch(function () {}); }
+        else { tileImg.pause(); }
+      }, { rootMargin: '100px' }).observe(tile);
+    } else {
+      tileImg.play().catch(function () {});
+    }
+
+    if (!fine) return;
 
     var expanded = false;
     var visible = false;
@@ -1184,6 +1195,7 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
         try { clone.currentTime = tileImg.currentTime; } catch (e) {}
       }
       visible = true;
+      clone.play().catch(function () {});
       gsap.set(clone, { display: 'block' });
       gsap.set(tileImg, { opacity: 0 });
       animateTo(targetBox, 0.45, 'power3.out', null);
@@ -1196,6 +1208,7 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
       animateTo(frameBox, 0.4, 'power3.inOut', function () {
         if (!expanded) {
           visible = false;
+          clone.pause();
           gsap.set(clone, { display: 'none' });
           gsap.set(tileImg, { opacity: 1 });
         }

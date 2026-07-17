@@ -946,6 +946,12 @@ body.is-loading {
 if (typeof lucide !== 'undefined') lucide.createIcons();
 if (typeof gsap !== 'undefined') { gsap.registerPlugin(ScrollTrigger); ScrollTrigger.normalizeScroll(true); }
 
+/* 刷新恢复滚动位置：浏览器原生恢复会被loader锁高度弄失效，改手动接管 */
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+window.addEventListener('beforeunload', function () {
+  try { sessionStorage.setItem('cykScrollY', String(window.scrollY || 0)); } catch (e) {}
+});
+
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 console.log('[DEBUG] reducedMotion:', reducedMotion);
 
@@ -957,6 +963,8 @@ if ((reducedMotion || typeof gsap === 'undefined') && noemaLoader) {
   console.log('[DEBUG] Skipping animations — reducedMotion=' + reducedMotion + ' gsap=' + (typeof gsap !== 'undefined'));
   document.body.classList.remove('is-loading');
   noemaLoader.remove();
+  var y0 = parseFloat(sessionStorage.getItem('cykScrollY') || '0');
+  if (y0 > 0) window.scrollTo(0, y0);
 }
 
 if (!reducedMotion && typeof gsap !== 'undefined') {
@@ -987,7 +995,13 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
     .to('.loader-scanline', { scaleX: 1, duration: 0.46, ease: 'power2.inOut' }, 1.08)
     .to('.loader-strip', { scaleY: 1, duration: 0.72, stagger: { each: 0.065, from: 'start' }, ease: 'expo.inOut' }, 1.16)
     /* Unlock body + refresh ScrollTrigger while loader still covers everything — prevents flash */
-    .call(() => { document.body.classList.remove('is-loading'); ScrollTrigger.refresh(); }, null, 1.6)
+    .call(() => {
+      document.body.classList.remove('is-loading');
+      ScrollTrigger.refresh();
+      /* loader还盖着时跳回刷新前位置，掀开即落位无闪跳 */
+      var y = parseFloat(sessionStorage.getItem('cykScrollY') || '0');
+      if (y > 0) window.scrollTo(0, y);
+    }, null, 1.6)
     .to('#noemaLoader', { yPercent: -100, autoAlpha: 0, duration: 0.76, ease: 'expo.inOut' }, 1.82)
     .fromTo('#heroWord', { autoAlpha: 0, y: 36, scale: 0.94 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.84, ease: 'expo.out' }, 1.72)
     .to('nav', { autoAlpha: 1, y: 0, duration: 0.48, ease: 'power2.out' }, 1.96)

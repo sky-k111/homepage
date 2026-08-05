@@ -11,10 +11,16 @@
 <script src="vendor/lucide.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<!-- 开场英文字体本地化：秒加载，无字体交换跳变 -->
+<!--
+  字体加载策略 — 分两路避免 FOIT/FOUT：
+  1. 展示用英文字体（Anton/Caveat/Inter）→ 本地 woff2 + preload，秒加载零跳变
+  2. 正文中文字体（Noto Sans SC）→ Google Fonts 异步加载，media="print" 技巧：
+     打印时立即加载，onload 切为 all 后才用于屏幕渲染。
+     网络不通时 fallback 系统字体，不卡首屏。
+     异步失败时 <noscript> 兜底同步加载。
+-->
 <link rel="preload" href="vendor/fonts/anton.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="stylesheet" href="vendor/fonts.css" />
-<!-- 中文字体远程异步：网络不通也不卡首屏 -->
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
 <noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet" /></noscript>
 <style>
@@ -234,12 +240,23 @@ body {
 }
 
 /* ======================= LOADER ======================= */
+/**
+ * 开场加载器架构：
+ *
+ * z-index 层级：loader(9999) > nav(100) > 正文内容
+ * 加载期间 body.is-loading 锁死高度为 100svh + overflow:hidden，
+ * 防止 loader 后面有可滚内容。loader 移除时同步去掉 is-loading 类解锁。
+ *
+ * scroll-behavior 被移除是因为 Safari 下与 GSAP ScrollTrigger 的 scrollTo 冲突。
+ * overflow-y:scroll 常驻滚动条 — 防止 fixed 元素的居中参考从包含滚动条变为不含，
+ * 导致 loader 文字和正式内容居中线不重合，出现"横跳"。
+ */
 html {
-  overflow-y: scroll; /* 滚动条常驻：视口宽度恒定，fixed元素与页面内容居中一致，开场不横移 */
+  overflow-y: scroll;
 }
 body.is-loading {
   height: 100svh;
-  overflow: hidden;
+  overflow: hidden;  /* 锁滚动，等 loader 移除后通过 JS 去掉此 class 解锁 */
 }
 .noema-loader {
   position: fixed;
@@ -952,11 +969,22 @@ body.is-loading {
   }
 })();
 
-// Safe init: don't let CDN failures kill the whole page
+/**
+ * 安全初始化策略 — CDN 失败时优雅降级而非白屏。
+ * GSAP/ScrollTrigger 任一缺失 → 跳过所有动画，移除 loader，恢复滚动。
+ * prefers-reduced-motion → 同样跳过动画。lucide 图标库失败只影响装饰性图标。
+ */
 if (typeof lucide !== 'undefined') lucide.createIcons();
 if (typeof gsap !== 'undefined') { gsap.registerPlugin(ScrollTrigger); ScrollTrigger.normalizeScroll(true); }
 
-/* 刷新恢复滚动位置：浏览器原生恢复会被loader锁高度弄失效，改手动接管 */
+/**
+ * 刷新恢复滚动位置。
+ *
+ * 为什么不用浏览器原生 history.scrollRestoration？
+ * loader 锁期间 body 高度=100svh，浏览器恢复的 scrollY 是 loader 移除前的旧值，
+ * 与真实页面高度不对应。改手动方案：beforeunload → sessionStorage → 动画就绪后手动恢复。
+ */
+
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 window.addEventListener('beforeunload', function () {
   try { sessionStorage.setItem('cykScrollY', String(window.scrollY || 0)); } catch (e) {}
@@ -1016,11 +1044,30 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
     .fromTo('#heroCopy', { y: 30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.62, ease: 'power2.out' }, 1.22);
 
   var introDone = false, assetsDone = false, exited = false;
+  /**
+   * 双门闩检查 — introTl 动画播完 AND 资源预载完 两个条件同时满足才触发 exitTl。
+   * 参数化调用，introTl.onComplete 和预载 finish() 各自调用一次，谁先谁后无所谓。
+   */
   function maybeExit() {
     if (introDone && assetsDone && !exited) { exited = true; exitTl.play(); }
   }
 
   /* ---------- 0b · 全量预载 + 进度 ---------- */
+  /**
+   * 页面资源预加载器 — 双门闩机制的"资源门闩"。
+   *
+   * 工作原理：
+   *   1. 扫描页面所有 <img src> + 项目演示视频，去重得到 URL 列表
+   *   2. 逐个加载：图片用 Image() 对象，视频用 fetch() 拉取 blob
+   *   3. 每完成一个调用 step() 推进进度百分比
+   *   4. 全部加载完或 15 秒超时 → finish() → 设置 assetsDone = true
+   *
+   * 进度显示：shown.v 是"显示值"，用 GSAP 动画平滑追赶真实进度，
+   *          避免缓存命中时进度从 0 瞬间跳到 100 的体验问题。
+   *
+   * 容错设计：单个资源加载失败也计入完成（onerror = step），
+   *          15 秒超时兜底，保证弱网/断网不卡死开场。
+   */
   (function () {
     var counter = document.getElementById('loadPct');
     var urls = [];
@@ -1135,6 +1182,8 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
 
   /* ---------- 4 · Projects ---------- */
   const projectsTimeline = gsap.timeline({
+    /* invalidateOnRefresh: 格子起始位置依赖 getBoundingClientRect，
+       窗口 resize 后重新计算，否则格子会从旧位置飞入，出现跳变 */
     scrollTrigger: { trigger: '#projects', start: 'top top', end: '+=240%', scrub: 1, pin: true, invalidateOnRefresh: true }
   });
   projectsTimeline
@@ -1155,6 +1204,24 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
     .to({}, { duration: 0.22 });
 
   /* ---------- 4b · Projects GIF hover 放大 ---------- */
+  /**
+   * Projects 视频格子的 hover FLIP 放大效果。
+   *
+   * 交互流程：
+   *   mouseenter → expand()：克隆视频从格子位置 FLIP 动画飞到屏幕中央（88vw×85vh），
+   *                         背后出现半透明遮罩。原格子内视频隐藏（opacity:0）。
+   *   mouseleave → collapse()：克隆视频缩小回到格子位置，遮罩消失，原视频恢复。
+   *   click → 跳转 GitHub 项目仓库。
+   *
+   * 核心设计：
+   *   - FLIP 动画逐帧插值：resize/scroll 时目标位置会变，每帧重算目标矩形并插值，
+   *     保证动画中途缩放窗口也不会跳变。
+   *   - clip-path 防跳变：格子用 object-fit:cover 会裁切视频边缘，
+   *     克隆层用 clip-path 模拟相同裁切量，从小格子过渡到大画面时无裁切突变。
+   *   - 视频懒播放：IntersectionObserver 只在 Projects 区域进入视口时播放视频，
+   *     避免页面其他区域时无谓消耗解码/渲染资源。
+   *   - 仅桌面端启用：触摸设备不触发 hover，mobile 直接跳过。
+   */
   (function () {
     var fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
     var tile = document.getElementById('gifTile');
@@ -1175,16 +1242,21 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
 
     if (!fine) return;
 
-    var expanded = false;
-    var visible = false;
-    var cur = null;          // 克隆盒当前状态（唯一事实来源）
-    var cloneTween = null;
+    var expanded = false;     // 当前是否处于放大状态
+    var visible = false;      // 克隆层是否可见（DOM display + 视频播放中）
+    var cur = null;           // 克隆盒当前状态（唯一事实来源），{left,top,width,height,cropX,cropY}
+    var cloneTween = null;    // 当前进行中的 FLIP 动画 tween，新动画前 kill 旧动画
 
+    /** 获取克隆视频的原始宽高比，用于 fit 计算。fallback 16:9 防止视频未加载时报错。 */
     function videoRatio() {
       return (clone.videoWidth || 16) / (clone.videoHeight || 9);
     }
 
-    /* 视频原始比例 fit 进 88vw × 85vh，屏幕居中 */
+    /**
+     * 计算放大状态的目标矩形 — 视频 fit 进 88vw × 85vh 并屏幕居中。
+     * 保持视频原始宽高比，超出则按高度约束缩小。
+     * @returns {{left, top, width, height, cropX: 0, cropY: 0}}
+     */
     function targetBox() {
       var vw = window.innerWidth, vh = window.innerHeight;
       var maxW = vw * 0.88, maxH = vh * 0.85;
@@ -1194,7 +1266,12 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
       return { left: (vw - w) / 2, top: (vh - h) / 2, width: w, height: h, cropX: 0, cropY: 0 };
     }
 
-    /* 格子 cover 裁切下视频完整画面占据的矩形；crop = 被裁掉的边宽（防跳变） */
+    /**
+     * 计算格子中视频实际占据的矩形区域。
+     * 格子使用 object-fit:cover，视频被等比例缩放后居中裁切。
+     * cropX/cropY 记录被裁掉的部分宽度 — 克隆层用 clip-path 模拟相同裁切，防跳变。
+     * @returns {{left, top, width, height, cropX, cropY}}
+     */
     function frameBox() {
       var r = tile.getBoundingClientRect();
       var ratio = videoRatio();
@@ -1210,6 +1287,7 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
       };
     }
 
+    /** 立即设置克隆盒位置/尺寸/clipPath，并更新 cur（事实来源）。无动画。 */
     function setBox(b) {
       cur = b;
       gsap.set(clone, {
@@ -1218,7 +1296,17 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
       });
     }
 
-    /* 每帧重算目标并插值——滚动/缩放中目标移动也实时跟随 */
+    /**
+     * FLIP 动画核心 — 每帧重算目标矩形并插值，实时跟随。
+     *
+     * 为什么每帧重算目标？因为动画过程中用户可能滚屏或缩放窗口，
+     * 目标位置会变。每次都调 getTarget() 取最新目标，保证动画终点始终正确。
+     *
+     * @param {Function} getTarget — 返回当前目标矩形的函数（targetBox 或 frameBox）
+     * @param {number} dur — 动画时长（秒）
+     * @param {string} ease — GSAP ease 曲线
+     * @param {Function|null} onDone — 完成回调
+     */
     function animateTo(getTarget, dur, ease, onDone) {
       if (cloneTween) cloneTween.kill();
       var from = cur;
@@ -1240,30 +1328,32 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
       });
     }
 
+    /** 放大：克隆视频从格子 FLIP 飞到屏幕中央。幂等 — 重复调用不重复执行。 */
     function expand() {
       if (expanded) return;
       expanded = true;
       if (!visible) {
-        setBox(frameBox());
-        try { clone.currentTime = tileImg.currentTime; } catch (e) {}
+        setBox(frameBox());                                    // 初始化为格子位置，防止从 (0,0) 跳变
+        try { clone.currentTime = tileImg.currentTime; } catch (e) {}  // 同步播放进度
       }
       visible = true;
       clone.play().catch(function () {});
       gsap.set(clone, { display: 'block' });
-      gsap.set(tileImg, { opacity: 0 });
+      gsap.set(tileImg, { opacity: 0 });                       // 隐藏格内原视频，克隆层替代
       animateTo(targetBox, 0.45, 'power3.out', null);
       gsap.to(backdrop, { autoAlpha: 1, duration: 0.35, overwrite: true });
     }
 
+    /** 缩小：克隆视频飞回格子位置。动画完成后隐藏克隆层、恢复格子原视频。 */
     function collapse() {
       if (!expanded) return;
       expanded = false;
       animateTo(frameBox, 0.4, 'power3.inOut', function () {
-        if (!expanded) {
+        if (!expanded) {                                       // 动画期间没被重新 expand，才算真正收起
           visible = false;
           clone.pause();
           gsap.set(clone, { display: 'none' });
-          gsap.set(tileImg, { opacity: 1 });
+          gsap.set(tileImg, { opacity: 1 });                   // 恢复格内原视频
         }
       });
       gsap.to(backdrop, { autoAlpha: 0, duration: 0.35, overwrite: true });
@@ -1412,6 +1502,19 @@ if (!reducedMotion && typeof gsap !== 'undefined') {
     .from('#footerHand', { autoAlpha: 0, scale: 0.4, rotate: -40, ease: 'none' }, 0.4);
 
   /* ---------- 9b · Footer 手写签名：进入后自动逐笔勾勒，只播一次 ---------- */
+  /**
+   * 页脚"陈"字手写签名逐笔描绘动画。
+   *
+   * 工作原理：
+   *   1. 读取 #chenSig 内每个 <path> 的总长度 getTotalLength()
+   *   2. 每笔设置 strokeDasharray = strokeDashoffset = L+2，让笔画完全不可见（+2 防圆头笔帽漏白点）
+   *   3. 按笔画长度占比分配动画时间：长笔画耗时多，短笔画耗时少
+   *   4. 逐笔 animation: strokeDashoffset 从 L+2 → 0，模拟手写效果
+   *
+   * 延迟启动：如果 footer 进入视口时 loader 还盖着（刷新时停在页面底部的情况），
+   *           用 delayedCall 轮询等待 loader 移除后再播放，避免动画被遮住。
+   *           once: true 保证签名只播一次，重复滚动不重播。
+   */
   (function () {
     var sigPaths = gsap.utils.toArray('#chenSig path');
     if (!sigPaths.length) return;

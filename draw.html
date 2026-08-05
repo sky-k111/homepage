@@ -95,30 +95,51 @@ button.export:hover { background: #34d399; }
 </div>
 
 <script>
+/**
+ * draw.html — 手写签名笔画采集工具
+ *
+ * 用途：用鼠标/触控笔在 Canvas 上写汉字"陈"，逐笔采集笔画坐标，
+ *       导出为标准 SVG <path> 数据，供 index.html 页脚手写签名动画使用。
+ *
+ * 数据流：pointer events → strokes[] → simplify() → exportSVG() → SVG 文本
+ *
+ * strokes 结构：[[{x,y}, ...], ...] — 外层数组每项是一笔，内层是笔画的坐标点序列。
+ * 笔画判定：pointerdown 开始新笔画 → pointermove 追加点 → pointerup 结束当前笔画。
+ * 只有点数 >= 2 的笔画才算有效笔画（单点只是点击，不构成笔画）。
+ */
+
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-const W = canvas.width;
-const H = canvas.height;
+const W = canvas.width;   // 1200 — 内部画布分辨率，导出 SVG viewBox 以此为基准
+const H = canvas.height;  // 500
 
-let strokes = [];      // [[{x,y}, {x,y}, ...], ...]
-let current = [];      // current stroke being drawn
+let strokes = [];      // [[{x,y}, {x,y}, ...], ...] — 所有已完成的笔画
+let current = [];      // 当前正在绘制的笔画（strokes 最后一项的引用）
 let drawing = false;
 
-// Styling
+// 笔刷默认样式 — 模拟真实毛笔圆头效果
 ctx.strokeStyle = '#050505';
 ctx.lineWidth = 32;
 ctx.lineCap = 'round';
 ctx.lineJoin = 'round';
 
+/**
+ * 设置笔刷粗细。只影响新笔画，已完成的笔画不重绘。
+ * 设计决策：不重绘旧笔画 — 保持书写过程中粗细变化的自然感，且重绘会清除 undo 历史。
+ */
 function setLineWidth(v) {
   ctx.lineWidth = parseInt(v);
   document.getElementById('lwVal').textContent = v;
-  // Re-render so existing strokes use new width? No — width only applies to new strokes.
 }
 
+/**
+ * 将鼠标/触摸事件坐标映射到 Canvas 内部坐标系。
+ * Canvas 的 CSS 尺寸可能被缩放（max-width: 100%），而内部绘图使用固定像素坐标。
+ * scaleX/scaleY 补偿 CSS 尺寸与内部分辨率之间的差异。
+ */
 function getPos(e) {
   const rect = canvas.getBoundingClientRect();
-  const scaleX = W / rect.width;
+  const scaleX = W / rect.width;   // CSS → 内部坐标缩放比
   const scaleY = H / rect.height;
   return {
     x: (e.clientX - rect.left) * scaleX,
@@ -156,6 +177,10 @@ window.addEventListener('pointerup', () => {
   updateCount();
 });
 
+/**
+ * 撤销最后一笔。直接从 strokes 数组移除然后全量重绘。
+ * 性能：笔画数通常 < 30，全量重绘足够快，不需要增量擦除逻辑。
+ */
 function undo() {
   if (strokes.length === 0) return;
   strokes.pop();
@@ -163,6 +188,7 @@ function undo() {
   updateCount();
 }
 
+/** 清除所有笔画，重置画布和导出区 */
 function clearAll() {
   strokes = [];
   current = [];
@@ -172,6 +198,11 @@ function clearAll() {
   document.getElementById('out').value = '';
 }
 
+/**
+ * 全量重绘画布上的所有笔画。
+ * 单点笔画（length === 1）画成实心圆点，多点笔画画成连续线段。
+ * NOTE: 重绘时使用当前 ctx.lineWidth，撤销后笔粗可能不匹配原始绘制时的粗细。
+ */
 function redraw() {
   ctx.clearRect(0, 0, W, H);
   for (const stroke of strokes) {
@@ -192,10 +223,24 @@ function redraw() {
   }
 }
 
+/** 更新 UI 笔画计数器 — 只统计有效笔画（>=2 个点的才算一笔） */
 function updateCount() {
   document.getElementById('strokeCount').textContent = strokes.filter(s => s.length >= 2).length;
 }
 
+/**
+ * 笔画点简化 — 道格拉斯-普克风格的最近点下采样。
+ *
+ * 目的：手写采集的 pointermove 事件非常密集（每像素可能触发多次），
+ *       导出 SVG 时需要压缩点数，否则 path 数据过长。
+ *
+ * 算法：遍历点序列，只保留与上一个保留点距离 >= minDist 的点。
+ *       最后强制保留终点，避免笔画末端被丢弃。
+ *
+ * @param {Array<{x:number,y:number}>} stroke — 原始笔画点序列
+ * @param {number} minDist — 最小保留距离（像素），默认 4px
+ * @returns {Array<{x:number,y:number}>} 简化后的点序列
+ */
 function simplify(stroke, minDist = 4) {
   if (stroke.length <= 2) return stroke;
   const result = [stroke[0]];
@@ -207,7 +252,7 @@ function simplify(stroke, minDist = 4) {
       result.push(stroke[i]);
     }
   }
-  // Always include last point
+  // 强制保留终点 — 保证笔画方向/结尾完整，不被下采样截断
   if (result.length > 1 || stroke.length > 1) {
     const lastR = result[result.length - 1];
     const lastS = stroke[stroke.length - 1];
@@ -218,6 +263,20 @@ function simplify(stroke, minDist = 4) {
   return result;
 }
 
+/**
+ * 导出所有笔画为 SVG 格式的 <path> 元素。
+ *
+ * 输出格式：
+ *   <svg viewBox="0 0 1200 500">
+ *     <g fill="none" stroke="#CCFF00" stroke-linecap="round" stroke-linejoin="round">
+ *       <path class="chen-s0" d="M x y L x y ..."/>
+ *       <path class="chen-s1" d="M x y L x y ..."/>
+ *       ...
+ *
+ * 每笔导出为一个 <path>，class 命名 chen-s{N} 方便 GSAP 逐笔选择和动画。
+ * 笔画先经 simplify() 压缩，减少 path 数据量。
+ * NOTE: stroke 颜色为占位色 #CCFF00，实际使用在 index.html 中会被 CSS/GSAP 覆盖。
+ */
 function exportSVG() {
   const valid = strokes.filter(s => s.length >= 2);
   if (valid.length === 0) {
